@@ -1,0 +1,25 @@
+Conclusioni
+===========
+
+In questo documento sono stati presentati ed analizzati due metodi di
+elaborazione di immagini volte all'ottimizzazione.
+
+Il primo è un'applicazione del LLM, studiato per il dominio del colore, al
+dominio dello spazio. Questo ha portato alla costruzione di un metodo molto
+generico applicabile come alternativa robusta al rumore nella risoluzione di
+equazioni di Poisson. Il problema principale del metodo risulta essere la
+perdita di definizione lungo i bordi dell'immagine, per cui viene proposto un
+blending del metodo con un metodo classico meno prono a questo problema. In
+futuro, per gestire meglio questo effetto, si potrebbe analizzare la selezione
+di patch di dimensione adattiva, come fatto da [#Lu:2012aa;][] per il dominio del
+colore.
+
+Il secondo è un GF per regioni dinamiche aiutato da un metodo per la
+classificazione di queste regioni. Invece di usare corrispondenze tra pixel,
+il metodo introduce corrispondenze tra matrici di covarianza locali. Nella
+classificazione, è stata utilizzata una SVM con valori nomerici ottenuti dalle
+equazioni dei GF come feature. La combinazione di GF può risultare in immagini
+con ridotte quantità di artefatti: in futuro, altri metodi di blending e
+combinazione potrebbero essere esplorati per ridurre ulteriormente questi
+effetti.
+

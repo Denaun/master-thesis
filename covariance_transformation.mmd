@@ -1,0 +1,392 @@
+Trasformazioni di colore tra coppie di immagini [sec:cov]
+=========================================================
+
+In questo capitolo, verrà prima mostrato il filtro guidato proposto (accennato
+in [](#sec:intro-cov)), basato sulla trasformazione tra covarianze, e la
+sua risoluzione. Successivamente verranno analizzate alcune cause della
+comparsa di decolorazioni e verranno proposti alcuni rimedi. Verrà infine
+trattato l'utilizzo di un classificatore per unire i risultati ottenuti
+dall'uso del GF proposto con i risultati ottenuti dall'utilizzo del GF
+proposto da [#Iwata:2013aa;][].
+
+## Filtro guidato per regioni dinamiche
+
+L'obiettivo del GF proposto per le regioni dinamiche resta comunque quello di
+trovare le matrici di trasformazione $\vect{A}_i$ ed i vettori di
+traslazione $\vect{b}_i$. Per ottenerli, però, viene tenuto conto del fatto
+che la forma di una distribuzione di colore è numericamente rappresentabile
+tramite la sua matrice di covarianza e, per questo, viene formulato un
+problema di ottimizzazione con un vincolo aggiunto sulle covarianze:
+\\[\label{eq:gf-proposed}
+\text{Eq. }\eqref{eq:gf-classic} \suchthat
+\Cov(\{\vect{A}_i\vect{I}_j + \vect{b}_i\}) = \Cov(\{\vect{p}_j\})
+\\]
+Dove la covarianza viene calcolata sfruttando dei pesi $w_{ij}$, usati per la
+rimozione di outliers, risultando quindi definita come:
+\\[\label{eq:cov-def}
+\Cov(\{x_j\}) = \frac{1}{\sum_j w_{ij}}
+\sum_{j\in\Omega_i} (\vect{x}_j - \mean{\vect{x}}_i)
+  \transp{(\vect{x}_j - \mean{\vect{x}}_i)} \in \set{R}^{3\times3}
+\\]
+Dove $\mean{\vect{x}} = \frac{1}{\sum_j w_{ij}} \sum_{j\in\Omega_i} w_{ij}
+\vect{x}_j$ denota la media pesata. La selezione dei pesi dipende
+dall'applicazione e, nell'applicazione mostrata in [](#sec:gf-results),
+vengono calcolati implicitamente sfruttando un'implementazione efficiente del
+filtraggio bilaterale [#Sugimoto:2014aa][].
+
+L'aggiunta di questo vincolo lascia comunque possibile l'esistenza di più di
+una soluzione: il problema sarà descritto in [](#sec:discolorations).
+
+### Soluzione rispetto a $\vect{b}_i$
+
+Espandendo [](#eq:gf-proposed) con la [definizione di covarianza](#eq:cov-def)
+e sostituendo $\vect{I}'_j = \vect{I}_j - \mean{\vect{I}}_i$ e
+$\vect{p'_j} = \vect{p}_j - \mean{\vect{p}}_i$, si ottiene:
+\\[\label{eq:gf-solution-b}
+\begin{split}
+0 & = \Cov(\{\vect{A}_i\vect{I}'_j + \vect{b}_i\}) - \Cov(\{p'_j\}) \\
+  & = \vect{A}_i \left(\frac{1}{\sum_j w_{ij}} \vect{I}'_j
+      \transp{\vect{I}'_j} \right) \transp{\vect{A}_i} - \left(
+      \frac{1}{\sum_j w_{ij}} \vect{p}'_j \transp{\vect{p}'_j} \right) \\
+  & = \vect{A}_i \Cov(\{\vect{I}'_j\}) \transp{\vect{A}_i} - \Cov(\{p'_j\})
+\end{split}
+\\]
+In questo processo, il vettore di offset $\vect{b}_i$ scompare, risultando
+apparentemente scorrelato dall'equazione. Derivando invece [](#eq:gf-classic)
+rispetto a $\vect{b}_i$ e ponendo il risultato a zero, si ottiene $\vect{b}_i
+= \mean{\vect{p}}_i - \vect{A}_i \mean{\vect{I}}_i$. Sostituendo nuovamente
+l'espressione trovata per $\vect{b}_i$ all'interno della trasformata affine
+$\vect{A}_i \vect{I}_j + \vect{b}_i$ si ottiene $\vect{A}_i (\vect{I}_j -
+\mean{\vect{I}}_i) + \mean{\vect{p}}_i = \vect{A}_i \vect{I}'_j +
+\mean{\vect{p}}_i$. Confrontando questo risultato con l'argomento della
+covarianza in [](#eq:gf-solution-b), si ottiene:
+\\[
+\vect{b}_i = \mean{\vect{p}}_i
+\\]
+
+### Soluzione rispetto a $\vect{A}_i$ [sec:gf-solution-a]
+
+La soluzione rispetto ad $\vect{A}_i$ si basa sui concetti di
+*decorrelazione* e di *ricostruzione* usati nella PCA.
+
+Innanzitutto, le matrici di covarianza $\Cov(\{\vect{I}'_j\})$ e
+$\Cov(\{\vect{p}'_j\})$ sono scomposte usando la SVD:
+\\[\label{eq:cov-svd}
+\Cov(\{\vect{I}'_j\}) = \vect{U}_i \vect{\Sigma}_i
+\transp{\vect{U}}_i, \quad \Cov(\{\vect{p}'_j\}) = \vect{V}_i
+\vect{\Xi} \transp{\vect{V}}_i
+\\]
+Successivamente vengono separate nel prodotto di due matrici:
+\\[\label{eq:svd-split}
+\vect{Q}_i \transp{\vect{Q}}_i
+= (\vect{U}_i \vect{\Sigma}^{\frac{1}{2}}_i)
+(\vect{\Sigma}^{\frac{1}{2}}_i \transp{\vect{U}}_i), \quad
+\vect{R}_i \transp{\vect{R}}_i
+= (\vect{V}_i \vect{\Xi}^{\frac{1}{2}}_i)
+(\vect{\Xi}^{\frac{1}{2}}_i \transp{\vect{V}}_i)
+\\]
+dove $\vect{U}_i = [\vect{u}_{1, i} | \vect{u}_{2, i} | \vect{u}_{i,
+3}]$ e $\vect{V}_i = [\vect{v}_{1, i} | \vect{v}_{2, i} | \vect{v}_{i,
+3}] \in \set{R}^{3\times3}$ sono matrici ortogonali composte dagli
+autovettori delle matrici di covarianza, rappresentanti i tre assi principali
+di ogni distribuzione di colore e $\vect{\Sigma} = \diag(\sigma^2_{1,
+i},\sigma^2_{2, i}, \sigma^2_{3, i})$ e $\vect{\Xi} = \diag(\xi^2_{1,
+i},\xi^2_{2, i}, \xi^2_{3, i}) \in \set{R}^{3\times3}$ sono le matrici
+degli autovalori delle matrici di covarianza, rappresentanti le varianze lungo
+gli assi principali di ogni distribuzione, con $\sigma_k \geq \sigma_{k+1}$ e
+$\xi_k \geq \xi_{k+1}$.
+
+Decorrelazione
+:   Il calcolo di $\{\widetilde{\vect{I}'}_j\} = \vect{Q}^{-1}_i
+\{\vect{I}'_j\}$ permette di decorrelare ogni patch, in modo che la sua
+covarianza corrisponda ad una matrice identità:
+$\Cov(\{\widetilde{\vect{I}'}_j\}) = \eye$
+
+Ricostruzione
+:   Il calcolo di $\{\widehat{\vect{p}}'_j\} = \vect{R}_i
+\{\widetilde{\vect{I}}'_j\}$ ricostruisce i dati, in modo tale da rendere loro
+covarianza uguale a quella dell'immagine in input:
+$\Cov(\{\hat{\vect{p}}'_j\}) = \Cov(\{\vect{p}'_j\})$.
+
+La soluzione di $\vect{A}_i$ risulta essere quindi:
+\\[\label{eq:gf-solution-a}
+\vect{A}_i = \vect{R}_i\vect{Q}^{-1}_i =
+\left(\vect{V}_i\vect{\Xi}^{\frac{1}{2}}_i\right)
+\left(\vect{\Sigma}^{-\frac{1}{2}}_i\transp{\vect{U}}_i\right)
+\\]
+
+Sostituendo [le
+equazioni](#eq:cov-svd)[,](#eq:svd-split)[,](#eq:gf-solution-a) in
+[](#eq:gf-solution-b), si può notare che il vincolo [](#eq:gf-proposed) viene
+soddisfatto:
+\\[\label{eq:cov-constraint-satisfied}
+\vect{R}_i\vect{Q}^{-1}_i (\vect{Q}_i\transp{\vect{Q}}_i)
+\transp{\vect{Q}}_i\transp{\vect{R}}_i - \vect{R}_i \transp{\vect{R}}_i = 0
+\\]
+Questo, però, non rende unica la soluzione, in quanto l'ordine delle
+componenti di $\vect{Q}_i$ e $\vect{R}_i$ è arbitrario. Alcune di queste
+soluzioni potrebbero causare decolorazioni ed un metodo per gestire questo
+problema è descritto in [](#sec:discolorations).
+
+### Trasformazione globale del colore
+
+La trasformazione locale del colore di ogni patch è assunta essere
+$\{\vect{A}_i \vect{I}_i + \vect{b}_i\}_{j\in\Omega_i}$ mentre, in
+pratica, la trasformazione per l'intera immagine è fatta in modo da ottenere i
+valori $\vect{q}^*_i$ ottimali utilizzando tutti i valori calcolati per
+$\vect{A}_i$ e $\vect{b}_i$. La funzione energia utilizzata è definita
+come:
+\\[\label{eq:proposed-energy-function}
+\arg\min_q\sum_i\sum_{j\in\Omega_i} w_{ij} \|\vect{A}_i \vect{I}_j +
+\vect{b}_i - \vect{q}_j \|^2_2
+\\]
+Ponendo i pesi costanti $w_{ij} = 1$,
+[](#eq:proposed-energy-function) corrisponde al GF standard
+[#He:2013aa][].
+
+La soluzione viene ottenuta come:
+\\[\label{eq:gf-classic-global}
+\vect{q}^*_i = \mean{\vect{A}}_i\vect{I}_i + \mean{\vect{b}}_i
+\\]
+dove $\mean{\vect{A}}_i = \frac{1}{N} \sum_{j\in\Omega_i} \vect{A}_i$ e
+$\mean{\vect{b}}_i = \frac{1}{N} \sum_{j\in\Omega_i} \vect{b}_i$ sono le
+medie dei valori attorno al pixel $i$, $N$ è il numero di pixels ed i pesi son
+normalizzati in modo da ottenere $N = \sum_j w_{ij}$. Quando $w_{ij} \in
+\{0,1\}$, un metodo approssimato ma rapido per calcolare le medie viene
+descritto in [#Lu:2012aa][]. Negli altri casi le medie sono ottenute
+tramite la convoluzione con filtri tempo-varianti con coefficienti $w_{ij}$
+[#Iwata:2013aa][].
+
+## Analisi e riduzione delle decolorazioni [sec:discolorations]
+
+Alcune matrici di trasformazione $\vect{A}_i$ ottenute come descritto nella
+[](#sec:gf-solution-a) hanno degli effetti collaterali e possono causare
+decolorazioni quando applicate direttamente. In questa sezione sono mostrati
+due problemi che causano decolorazioni e le relative soluzioni adottate.
+
+### Correzione dell'ordine e del segno degli autovettori
+
+Nella derivazione della matrice di trasformazione del colore, vengono
+utilizzate [le matrici di autovettori $\vect{U}_i$ e
+$\vect{V}_i$](#eq:gf-solution-a). Queste presentano però due ambiguità:
+
+ 1. L'ordine degli autovettori principali.  
+    Questo problema sorge dal fatto che la distribuzione di colore di una
+    regione uniforme diviene sferica, con la conseguenza che l'ordine degli
+    assi è facilmente scambiabile a causa del rumore---e.g.,
+    $[\vect{u}_1|\vect{u}_2|\vect{u}_3] \to
+    [\vect{u}_1|\vect{u}_3|\vect{u}_2]$.
+ 2. La direzione (i.e., il segno) degli autovettori.  
+    Questo problema riguarda il fatto che in genere il segno degli autovettori
+    non viene specificato, lasciando quindi la possibilità di un'inversione di
+    segno in ogni colonna---e.g., 
+    $[\vect{u}_1|\vect{u}_2|\vect{u}_3] \to
+    [\pm\vect{u}_1|\pm\vect{u}_2|\pm\vect{u}_3]$.
+
+Per gestire questi problemi, vengono fatte due assunzioni:
+
+ 1. Una coppia di patch presentano distribuzioni di colore di forma simile tra
+    di loro. Questo implica che l'ordine degli assi principali sia lo stesso.
+    Inoltre, nel caso in cui la distribuzione divenga sferica in una regione
+    di colore uniforme e che, quindi, l'ordine degli assi non sia decidibile,
+    questo non risulta un problema visto che la varianza lungo ogni asse è
+    simile.
+ 2. Coppie corrispondenti di autovettori di una coppia di patch hanno lo
+    stesso orientamento. La direzione è quindi correggibile usando il segno
+    del prodotto scalare: $\vect{u}_k := \vect{u}_k *
+    \sgn(\transp{\vect{u}_k} \vect{v}_k)$.
+
+### Correzione degli autovalori di $\vect{\Xi}_i$ e $\vect{\Sigma}_i$
+
+La matrice $\vect{R}_i$ in $\vect{A}_i = \vect{R}_i \vect{Q}^{-1}_i$, i.e.,
+$\vect{R}_i = \vect{V}_i \vect{\Xi}^{\frac{1}{2}}_i$ viene ottenuta da dati
+rumorosi, e l'influenza del rumore appare principalmente in $\vect{\Xi}_i$.
+Ciò significa che, quando una distribuzione di colore viene alterata dalla
+influenza del rumore, le sue varianze $\{\xi^2_1, \xi^2_2, \xi^2_3\}$
+aumentano. Questo porta ad un'espansione eccessiva della distribuzione
+trasformata e, quindi, un'enfasi eccessiva del colore.
+
+<!-- \todo{Expand} -->
+Dalla nostra esperienza[#Shirai:2012aa,Ono:2013aa][], le deviazioni
+standard lungo il secondo e, in particolare, il terzo asse ($\{\xi_2,
+\xi_3\}$) sono collegate alle decolorazioni: anche nel caso in cui i dati non
+contengano alcun rumore, un'espansione della distribuzione del colore lungo
+questi due assi risulta in un'enfatizzazione delle decolorazioni.
+
+La gestione di questi problemi viene fatta basandosi sui rapporti tra le
+coppie di autovalori corrispondenti delle matrici $\vect{\Xi}^\frac{1}{2}_i$
+e $\vect{\Sigma}^{-\frac{1}{2}}_i$, ossia gli elementi della diagonale di
+$\vect{\Xi}^\frac{1}{2}_i\vect{\Sigma}^{-\frac{1}{2}}_i =
+\diag(\frac{\xi_1}{\sigma_1}, \frac{\xi_2}{\sigma_2},
+\frac{\xi_3}{\sigma_3})$, presente nel calcolo di
+$\vect{R}_i\vect{Q}^{-1}_i$. La riduzione di ogni elemento di
+$\vect{\Xi}_i$ viene fatta come segue:
+
+  * Il __primo__ autovalore viene utilizzato senza effettuare alcuna
+    correzione;
+  * Il __secondo__ autovalore viene sostituito direttamente con il
+    corrispondente ottenuto senza rumore---i.e., $\xi_2 := \sigma_2 \implies
+    \frac{\xi_2}{\sigma_2} = 1$;
+  * Il __terzo__ autovalore, il quale è la causa principale delle
+    decolorazioni, viene mantenuto il più piccolo possibile, sostituendolo con
+    il più piccolo tra $\xi_3$ e $\sigma_3$---i.e., $\xi_3 := \min(\xi_3,
+    \sigma_3) \implies \frac{\xi_3}{\sigma_3} \leq 1$.
+
+## Classificazione di regioni statiche e dinamiche, e blending
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.22\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{dynamic_input.png}
+
+    \includegraphics[width=\textwidth]{static_input.png}
+    \caption{Input}\label{fig:gf-results-a}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.22\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{dynamic_guidance.png}
+
+    \includegraphics[width=\textwidth]{static_guidance.png}
+    \caption{Guida}\label{fig:gf-results-b}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[b]{.22\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{dynamic_classic.png}
+
+    \includegraphics[width=\textwidth]{static_classic.png}
+    \caption{GF pesato}\label{fig:gf-results-c}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.22\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{dynamic_proposed.png}
+
+    \includegraphics[width=\textwidth]{static_proposed.png}
+    \caption{GF proposto}\label{fig:gf-results-d}
+  \end{subfigure}
+  \caption{Trasformazioni di colore e contrasto tramite GF, per regioni
+    statiche e dinamiche.}\label{fig:gf-results}
+  \medskip
+  \small
+  Alto: risultati su una regione dinamica. Basso: risultati su una regione
+  statica. \\
+  Da sinistra a destra: immagini in input, rumorosa\footnotemark{} ma con
+  contrasto ideale (a); immagini guida, con messa a fuoco ideale ma contrasto
+  alterato (b); risultato del GF -->[#Iwata:2013aa][]<!-- (c); risultato del
+  GF proposto (d).
+\end{figure}
+
+\footnotetext{Per enfatizzare sia i problemi sia l'efficacia dei metodi,
+è stato aggiunto del rumore Gaussiano con deviazione standard 0.06.}
+-->
+
+I risultati dell'utilizzo di entrambi i GF sono mostrati in
+[](#fig:gf-results): si può notare in [](#fig:gf-results-d) che il GF proposto
+risulta in un'immagine naturale e senza sfumature per la regione dinamica,
+mentre purtroppo causa la comparsa di decolorazioni nella regione statica a
+causa della presenza di rumore nell'immagine di input. Visto che ogni GF ha
+vantaggi e svantaggi, l'obiettivo di questo capitolo è di riuscire ad
+utilizzare il GF adeguato in modo selettivo, regione per regione, in modo da
+ottenere un risultato più naturale.
+
+Analizzando le matrici di trasformazione ottenute con i GF esistenti, si nota
+che la presenza di sfocature è associabile alla norma delle matrici
+$\|\vect{A}_i\|$, i.e giocano un ruolo da fattore di riscalatura del contrasto
+di ogni patch e, decrescendo, causano il valore di $\vect{A}_i\vect{I}_i$ di
+avvicinarsi a zero e, quindi del valore finale di $\vect{A}_i\vect{I}_j +
+\vect{b}_i$ di avvicinarsi alla media $\vect{b}_i$ dei pixel della patch.
+Questa osservazione implica che anche le regioni dinamiche sono classificabili
+sulla base delle norme e degli errori di trasformazione di [](#eq:gf-classic).
+
+Per effettuare questa classificazione tra regioni statiche e regioni
+dinamiche, viene utilizzata un SVM [#Cortes:1995aa,Burges:1998aa][]
+[^ImplementazioneSVM]. La SVM richiede una fase di addestramento ed una di
+testing: i dettagli della prima sono descritti nella prossima sezione, mentre
+i risultati della seconda fase sono descritti in [](#sec:gf-results).
+
+### Addestramento della Support Vector Machine [sec:svm-training]
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{training0_noflash.png}
+
+    \includegraphics[width=\textwidth]{training8_noflash.png}
+    \caption{Input}\label{fig:svm-train-a}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{training0_flash.png}
+
+    \includegraphics[width=\textwidth]{training8_flash.png}
+    \caption{Guida}\label{fig:svm-train-b}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{training0_trimap.png}
+
+    \includegraphics[width=\textwidth]{training8_trimap.png}
+    \caption{Trimap}\label{fig:svm-train-c}
+  \end{subfigure}
+  \caption{Esempio di set di immagini utilizzate nella fase di addestramento
+    della SVM}\label{fig:svm-train}
+\end{figure}
+-->
+
+Per la fase di addestramento, è stato costruito un dataset di triple di
+immagini organizzate come in [](#fig:svm-train): alle due immagini di input e
+guida viene associata una terza immagine con degli "scarabocchi" utilizzati
+per specificare le regioni statiche (tratti neri) e le regioni dinamiche
+(tratti bianchi) [](#fig:svm-train-c). I pixel corrispondenti a regioni
+statiche vengono etichettate come $y_i = -1$, le regioni dinamiche vengono
+etichettate come $y_i = +1$, mentre le regioni in grigio non vengono
+utilizzate.
+
+I *feature vectors* ($\in \set{R}^3$) usati per l'addestramento vengono poi
+definiti come composizione delle seguenti features:
+
+  * La norma di Frobenius[^FrobeniusNorm] della matrice di trasformazione,
+    i.e., $\|\vect{A}_i\|^2_F \in \set{R}$;
+  * La norma $\ell_2$ del vettore di offset, i.e., $\|\vect{b}_i\|^2_2 \in
+    \set{R}$.  
+    Questa feature è pensata per le decolorazioni nelle regioni scure, dove la
+    media dei pixel tende a zero e la forma delle distribuzioni di colore
+    diviene sferica.
+  * Il termine di fedeltà: $\sum_{j\in\Omega_i} w_{ij}
+    \|\vect{A}_i\vect{I}_j + \vect{b}_i - \vect{p}_j\|^2_2 \in
+    \set{R}$.
+
+Utilizzando queste etichette e questi vettori di caratteristiche per ogni
+coppia di immagini nel dataset, viene effettuato l'addestramento della SVM.
+
+### Classificazione e metodi di blending
+
+I risultati della classificazione, effettuata basandosi sull'etichettatura
+effettuata come descritto nella [](#sec:svm-training), consistono in valori
+positivi ($y_i > 0$) per le regioni dinamiche e valori negativi ($y_i < 0$)
+per le regioni statiche.
+
+Il risultato finale viene ottenuto come blending pixel-wise dei risultati del
+GF pesato $\vect{q}_i$ e del GF proposto $\vect{q}'_i$:
+\\[\label{eq:gf-blending}
+\vect{q}^*_i = (1-\alpha(y_i))\vect{q}_i + \alpha(y_i)\vect{q}'_i
+\\]
+dove $\alpha(\cdot) \in [0, 1]$ denota una funzione di blending come una
+sigmoide---e.g., $\alpha(y_i) = (1 + \exp(-\beta y_i))^{-1} \in [0, 1]$, dove
+$\beta$ è un parametro che controlla la larghezza della transizione. I
+risultati sperimentali ottenuti utilizzando questo metodo sono mostrati in
+[](#sec:gf-results).
+
+[^ImplementazioneSVM]: Nell'implementazione, è stato usato *SVM^perf*
+[#Joachims:1999aa,Joachims:2006aa,Joachims:2009aa][] con un
+radial basis function kernel [#Cortes:1995aa,Burges:1998aa][] ed i parametri
+di default.
+

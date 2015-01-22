@@ -1,0 +1,332 @@
+Introduzione
+============
+
+Il miglioramento di immagini digitali è un compito importante sia a livello
+artistico dove, per quanto la gradevolezza sia un parametro soggettivo, è
+spesso importante che le immagini abbiano rumore ridotto, e colori naturali e
+non eccessivamente saturi; sia a livello di computer vision, dove un'immagine
+pre-trattata adeguatamente può semplificare e favorire compiti come il
+riconoscimento di oggetti, il loro tracciamento, la segmentazione, ecc. In
+questo documento verranno presentate due tecniche applicabili in questo ambito.
+
+La prima, introdotta in [](#sec:intro-llm) e descritta in [](#sec:llm),
+sfrutta le intensità dell'immagine per costruire un'approssimazione della
+stessa tramite delle superfici planari definite in ogni pixel.  Le
+inclinazioni di queste superfici rappresentano una sorta di gradiente
+dell'immagine, col vantaggio aggiuntivo di una robustezza maggiore al rumore.
+Questo nuovo metodo può essere adottato in sostituzione a qualsiasi
+applicazione impieghi l'equazione di Poisson ed alcune sue applicazioni
+saranno mostrate in [](#sec:llm-applications).
+
+La seconda tecnica analizzata, introdotta in [](#sec:intro-cov) e descritta in
+[](#sec:cov), è un nuovo approccio al filtraggio guidato incentrato sul
+rilassamento del forte requisito di allineamento tra i pixel dell'immagine in
+input e l'immagine guida. L'utilità di questo metodo risulta evidente quando
+sia l'immagine in input che l'immagine guida sono fotografie di scene naturali
+ottenute in condizioni---e quindi istanti temporali---differenti: è facile che
+le due immagini non risultino perfettamente allineate in qualche area (ad
+esempio, le foglie degli alberi). Gli approcci classici al filtraggio guidato
+tendono a causare, in questo caso, la comparsa di artefatti come sfocature o
+decolorazioni. La tecnica proposta riesce a risolvere questi problemi, al
+costo di artefatti nelle regioni statiche. Per questo motivo, in
+[](#sec:discolorations), viene proposto un metodo per combinare il filtraggio
+guidato classico con il filtraggio guidato proposto.
+
+## Approssimazioni locali di immagini a superfici planari [sec:intro-llm]
+
+Un importante compito nell'elaborazione di immagini e video è il *matting
+digitale interattivo*, ossia il processo tramite cui un oggetto in primo piano
+viene estratto da un'immagine basandosi su input limitato da parte
+dell'utente [](#fig:intro-matting). Dal punto di vista della computer vision,
+questo compito è una grande sfida in quanto consiste in un problema
+estremamente mal posto, richiedendo la stima in ogni pixel dell'immagine del
+colore del primo piano, dello sfondo, e dell'opacità del primo piano (*matting
+alpha*), tutto da una singola misurazione del colore.
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{matting_original.png}
+    \caption{Originale}\label{fig:intro-matting-a}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{matting_mark.png}
+    \caption{Input}\label{fig:intro-matting-b}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{matting_alpha.png}
+    \caption{Matting alpha}\label{fig:intro-matting-c}
+  \end{subfigure}
+  \caption{Esempio di image matting}\label{fig:intro-matting}
+  \medskip
+  \small
+  -->
+  Dall'immagine (a) viene estratta la maschera rappresentante il dente di
+  leone (c).  
+  In (b) è mostrato l'input dell'utente (le macchie nere indicano la regione
+  da considerare come sfondo, mentre quelle bianche indicano la regione da
+  considerare come primo piano) necessario per ottenere il risultato (c)
+  tramite l'algoritmo proposto da [#Levin:2008aa;][].
+  <!--
+\end{figure}
+-->
+
+I metodi
+classici[#Apostoloff:2004aa,Berman:2000aa,Chuang:2002aa,Chuang:2001aa,Ruzon:2000aa,Sun:2004aa][]
+affrontavano il problema restringendo l'analisi ad una piccola regione
+dell'immagine, effettuando la stima basandosi sui pixel vicini, dove noti,
+oppure tramite una stima iterativa e non lineare composta dall'alternanza
+della stima del colore di primo piano e sfondo con quella del matting alpha.
+Nel 2008, [#Levin:2008aa;][] hanno proposto una soluzione in forma chiusa
+all'image matting naturale. Il metodo deriva una funzione di costo da
+assunzioni locali sull'omogeneità dei colori di primo piano e sfondo e, da
+questa, ottiene una funzione di costo quadratica con solamente alpha come
+incognita.
+
+Questo metodo è stato chiamato LLM ed è ora un potente strumento per
+l'elaborazione di immagini volta all'ottimizzazione, non solo come termine di
+*data fidelity*, ma anche come vincolo versatile, ed ha visto applicazioni
+in più ambiti, come immagini intrinseche[^IntrinsicImages]
+[#Bousseau:2009aa][], tone mapping[^ToneMapping] [#Shan:2010aa][], filtraggio
+guidato [#He:2013aa][], ed altri.
+
+Per quanto molti studi siano stati fatti riguardo al metodo nel dominio del
+colore, non sono note sue applicazioni a quello dello spazio. Sono stati
+comunque studiati metodi alternativi nell'ambito dell'approssimazione di
+intensità, ad esempio:
+
+  * Nello stereo matching[#Klaus:2006aa][], la continuità della
+    profondità viene ottenuta usando superfici piatte a tratti. Tuttavia, dato
+    che questi metodi sono espressi come operazioni non lineari ed hanno alta
+    complessità computazionale, non sono adatti all'uso per la soluzione di
+    problemi di ottimizzazione.
+  * Lo stereo fotometrico[#Nehab:2005aa,Agrawal:2006aa][] è un metodo basato
+    sull'ottimizzazione che intende recuperare una mappa di profondità di un
+    oggetto da informazioni su vettori normali alle superfici, quali la
+    luminanza. Per fare questo, la superficie approssimata viene collegata
+    implicitamente al problema del restauro in ogni pixel e l'equazione di
+    Poisson associata viene risolta con il tradizionale filtraggio Laplaciano
+    iterativo: neanche qui, quindi viene fatto uso esplicito del LLM.
+
+Similarmente a come fatto negli studi sopracitati, verrà assunto che le
+distribuzioni delle intensità di luminanza possano essere approssimate
+localmente con piani tangenti ad una superficie. Basandosi su questa
+assunzione, verrà descritto un metodo di ottimizzazione applicabile a problemi
+di ricostruzione involgenti *vettori normali* a piani tangenziali e *gradienti
+di immagini* ortogonali alle normali. Questo metodo può essere applicato ad
+una varietà di problemi quali lo stereo fotometrico, la rimozione di riflessi
+[#Agrawal:2005aa][], la rimozione di ombre
+[#Finlayson:2006aa,Finlayson:2004aa,Shor:2008aa][], e altri metodi chiamati
+GDO [#Fattal:2002aa,Harker:2008aa,Rouf:2012aa][].
+
+A differenza dei convenzionali operatori differenziali che operano a corto
+raggio, il LLM può rappresentare variazioni di luminanza in una regione più
+ampia, fornendo risultati più robusti. Mentre filtri differenziali con
+risposte all'impulso più lunghe, come quelli usati in
+[#Nehab:2005aa,Shen:2009aa][] o anche i filtri di Sobel[^SobelOperator]
+$3\times3$ e di [#Scharr:2000aa;][], causano la comparsa di artefatti a
+griglia nelle immagini risultanti, il LLM riesce a rimuovere il rumore ed a
+fornire risultati più naturali. Lo svantaggio consiste, però, nella perdita di
+definizione degli spigoli rispetto alla differenza finita. Per questo motivo è
+possibile adottare una combinazione tra i due metodi in grado di compensare
+gli svantaggi tra i due e fornire risultati migliori.
+
+I contributi portati da questo studio consistono in:
+
+Modello Lineare Locale per il Dominio dello Spazio:
+:   applicabile ai GDO che includono l'equazione di Poisson: $\arg\min_I\sum_i
+    \left\|\nabla I_i - \vect{J}_i \right\|^2_2$ (con $I_i\in\set{R}$ e
+    $\vect{J}_i\in\set{R}^2$), o la sua versione estesa con il LLM. Questo
+    metodo fornisce risultati migliori dei filtri differenziali risposta
+    all'impulso lunga.
+    
+
+Alta gestibilità:
+:   questo LLM può essere usato in congiunzione con la convenzionale equazione
+    di Poisson come vincolo e stabilizzatore, con lo scopo di migliorare la
+    qualità dell'immagine. Verranno mostrati un metodo di calcolo efficiente
+    in grado di gestire grandi kernel ed un metodo[#He:2010aa][] che fa uso
+    del metodo del Gradiente Coniugato[#Hestenes:1952aa,Barrett:1994aa][] e
+    dell'*immagine integrale* [#Crow:1984aa][].
+
+## Trasformazioni di colore tra coppie di immagini [sec:intro-cov]
+
+Il secondo tema affrontato riguarda il restauro di immagini deteriorate da
+rumore e saturazione dell'intensità del colore. In questo ambito, l'utilizzo
+di più immagini spesso porta a risultati migliori dell'utilizzo di una sola
+immagine. I metodi classici per effettuare queste operazioni richiedono,
+solitamente, che le posizioni dei soggetti presenti nelle due immagini siano
+*completamente allineati*, pena la comparsa di sfocature ed il fallimento
+nella correzione dell'immagini.  
+
+Tra i metodi che sfruttano molteplici immagini son stati considerati
+i GF [#He:2013aa,Shirai:2011aa,Lu:2012aa,Iwata:2013aa][], ossia filtri che
+usano un'immagine della stessa scena ottenuta in condizioni differenti come
+guida---e.g, per restaurare un'immagine di una scena notturna ottenuta senza
+l'utilizzo del flash, quindi con rumore dovuto all'alta sensibilità ISO
+necessaria, potrebbe venire utilizzata come immagine guida un'immagine della
+stessa scena, ottenuta però con l'ausilio del flash e, quindi, con rumore
+molto ridotto al costo della comparsa di di alterazioni dei colori dovute
+dalla luce del flash ed eventuali saturazioni. Nonostante questi metodi siano
+stati applicati in una varietà di situazioni, come correzione del contrasto
+[#Yuan:2012aa][] e stereo matching [#Rhemann:2011aa][], le applicazioni
+obiettivo del metodo studiato sono la rimozione del rumore ed il tone
+mapping[#Shirai:2011aa,Iwata:2013aa,Yuan:2012aa][].
+
+I filtri guidati nascono come alternativa ai classici filtri LTI: permettono
+infatti tempi di elaborazione genericamente inferiori (risultano richiedere
+tempi lineari, indipendentemente dalla dimensione del kernel). Possono essere
+utilizzati come operatori liscianti in grado di preservare i contorni meglio
+di filtri come il filtro bilaterale[Tomasi:1998aa][] e, soprattutto,
+permettono nuove applicazioni del filtraggio grazie alla possibilità di
+trasferire strutture dell'immagine guida sull'immagine in
+uscita [](#fig:intro-gf-he).
+
+<!--
+\begin{figure}
+  \centering
+  \includegraphics[width=.5\textwidth]{gf_he.jpg}
+  \caption{Illustrazione del processo di funzionamento del filtraggio
+  guidato}\label{fig:intro-gf-he}
+  \medskip
+  \small
+  -->
+  L'immagine mostra, in particolare, l'applicazione del filtraggio per il
+  trasferimento della struttura.
+  Immagine presa da [#He:2013aa][].
+  <!--
+\end{figure}
+-->
+
+In genere, la distribuzione del colore su una piccola regione di un'immagine
+(chiamata anche *patch*) presenta una caratteristica denominata *color-line*
+[^ColorLines] [#Omer:2004aa][]. In patch corrispondenti di coppie di immagini
+rappresentanti la stessa scena ma ottenute in condizioni diverse, le due
+distribuzioni del colore tendono ad assomigliarsi e, pertanto, una di esse può
+essere ottenuta in modo approssimato come rotazione e traslazione dell'altra.
+Basandosi su questa osservazione, i GF esistenti
+[#He:2013aa,Shirai:2011aa,Lu:2012aa,Iwata:2013aa][] affrontano il problema
+tramite la determinazione di una matrice di trasformazione che sia in grado di
+minimizzare l'errore della trasformazione commesso in ogni patch, i.e.,
+esaminando un pixel $i$ ed i suoi vicini $j$ appartenenti alla patch
+$\Omega_i$, i colori locali dei pixel dell'immagine guida $\vect{I}_j \in
+\set{R}^3$ (e.g., RGB o YCbCr) sono trasformati linearmente tramite una
+matrice $\vect{A}_i \in \set{R}^{3\times3}$ ed un vettore $\vect{b}_i \in
+\set{R}^3$ comuni all'intera patch in modo da renderli il più simile possibile
+ai colori locali dei pixel dell'immagine fornita in input $\vect{p}_j \in
+\set{R}^3$:
+\\[\label{eq:gf-classic}
+\arg\min_{A, b} \sum_i \sum_{j \in \Omega_i} w_{ij}
+\left(\|\vect{A}_i\vect{I}_j + \vect{b}_i - \vect{p}_j\|^2_2
+      + R\right)
+\\]
+dove $w_{ij}$ sono pesi introdotti per rimuovere outliers ed $R$ è un
+termine di regolarizzazione atto a garantire l'esistenza di una soluzione.  
+
+Nell'applicazione di questo GF a *regioni dinamiche*, come foglie su alberi o
+superfici d'acqua, l'errore commesso nell'approssimazione aumenta a causa del
+disallineamento tra i corrispondenti $\vect{p}_j$ e $\vect{I}_j$. Questo a
+sua volta causa un decremento delle norme delle matrici di trasformazione 
+($\|\vect{A}_i\| \to 0$) e, di conseguenza, una riduzione del contrasto
+di queste patch: [$\vect{A}_i\vect{I}_j \to
+0$](#fig:intro-cov-discolourations).
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.49\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{root_noflash_noise.png}
+    \caption{Input}\label{fig:intro-cov-discolourations-a}
+  \end{subfigure}
+  \begin{subfigure}[b]{.49\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{root_flash.png}
+    \caption{Guida}\label{fig:intro-cov-discolourations-b}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{.49\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{root_result_LCDP.png}
+    \caption{GF
+    pesato-->[#Iwata:2013aa][]<!--}\label{fig:intro-cov-discolourations-c}
+  \end{subfigure}
+  \begin{subfigure}[b]{.49\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{root_result_KWS.png}
+    \caption{GF proposto}\label{fig:intro-cov-discolourations-d}
+  \end{subfigure}
+  \caption{Esempio di applicazione del filtraggio
+  guidato}\label{fig:intro-cov-discolourations}
+  \medskip
+  \small
+  Lo sfondo alberato risulta non allineato tra le immagini in input (a) e
+  guida (b). Questo porta a sfocature nel risultato della combinazione delle
+  due immagini tramite GF classici (c). Il metodo proposto (d) riesce a
+  gestire questo problema.
+\end{figure}
+-->
+
+Il metodo qui proposto è costruito apposta per gestire le regioni dinamiche e
+per ottenere questo lavora sul rendere conformi tra di loro le due *matrici di
+covarianza* della coppia di patch. Questo approccio ottiene l'effetto
+desiderato---di trasformare una distribuzione di colore in un'altra---grazie
+al fatto che la forma assunta da una distribuzione di colore è numericamente
+rappresentabile tramite la sua matrice di covarianza. Inoltre, visto che le
+due matrici sono calcolabili separatamente, è possibile rilassare la
+corrispondenza pixel-per-pixel ed ottenere così buoni risultati sulle regioni
+dinamiche. Tuttavia, come svantaggio per il non utilizzare queste
+corrispondenze, possono sorgere decolorazioni (intese come *asperità* di
+colore) durante la trasformazione, rendendo la qualità delle *regioni
+statiche* inferiore a quella dei GF classici e, in particolare, del GF
+proposto da [#Iwata:2013aa;][].
+
+Sia il metodo proposto che il metodo convenzionale presentano, quindi,
+vantaggi e svantaggi su regioni pressoché complementari. È quindi possibile
+combinare i due metodi per ottenere un risultato che presenta i vantaggi di
+entrambe le idee e riduce al minimo i loro svantaggi; questo viene fatto
+sfruttando un classificatore addestrato in modo da riuscire a distinguere tra
+regioni statiche e dinamiche dell'immagine ed utilizzando il metodo più
+consono ad ogni regione dell'immagine.  
+
+Sfortunatamente, a causa delle differenze sostanziali nei colori dell'immagine
+di input e dell'immagine guida, non è possibile utilizzare metodi esistenti di
+elaborazione di immagini o video. Il classificatore basa le sue decisioni
+quindi sugli [errori commessi nella trasformazione](#eq:gf-classic) e sulle
+norme delle matrici usate per riconoscere la comparsa di sfocature
+nell'immagine in uscita. Come classificatore viene adottato un SVM
+[#Cortes:1995aa,Joachims:1999aa][], mentre il GF usato per il calcolo delle
+feature necessarie alla classificazione è[#Iwata:2013aa][].
+
+[^IntrinsicImages]: La tecnica delle __immagini intrinseche__ consiste nella
+scomposizione di un'immagine tra componenti intrinseche di riflessione,
+contenente informazioni sul colore degli oggetti nella scena, ed
+illuminazione, contenente informazioni sulle texture.
+
+[^ToneMapping]: Il __tone mapping__ è una tecnica che consiste nel creare una
+relazione tra due set di colori con lo scopo di approssimare immagini HDR per
+la visualizzazione tramite un mezzo con range dinamico limitato.
+
+[^SobelOperator]: I __filtri di Sobel__ consistono in coppie di filtri
+(uno orizzontale e la sua versione trasposta, verticale) solitamente
+utilizzati per il rilevamento di bordi. Comunemente sono di dimensione
+$3\times3$ e corrispondono alle matrici
+$\vect{G}_x =
+\begin{bmatrix}
+  -1 & -2 & -1 \\
+   0 &  0 &  0 \\
+   1 &  2 &  1 \\
+\end{bmatrix}$ e $\vect{G}_y = \transp{\vect{G}}_x$.
+
+[^ColorLines]: La forma di una distribuzione di colore tende ad assumere
+un'estensione lineare o planare a causa di ombreggiature, luci, e per la
+mescolanza di più colori. Ciò significa che, applicando una trasformazione
+lineare affine alle distribuzioni di colore in un'immagine, è possibile
+trasformare i colori e anche levigarli [#He:2013aa,Iwata:2013aa][].
+

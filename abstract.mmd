@@ -1,0 +1,43 @@
+<!--
+\thispagestyle{empty}
+\begin{abstract}
+-->
+
+Nel presente documento verranno presentati due metodi di miglioramento di
+immagini digitali: il *modello lineare locale applicato al dominio dello
+spazio* e il *filtraggio guidato basato su corrispondenze tra covarianze*.
+
+Il modello lineare locale[#Levin:2008aa][] è un potente metodo per
+l'elaborazione di immagini volta all'ottimizzazione, applicato nel dominio del
+colore in vari ambiti come immagini intrinseche[#Bousseau:2009aa][], tone
+mapping[#Shan:2010aa][], filtraggio guidato[#He:2013aa][], ed altri. La prima
+tecnica qui analizzata è quindi l'applicazione del modello lineare locale al
+dominio dello spazio, costruendo così uno strumento robusto per il calcolo di
+gradienti e la risoluzione di equazioni di Poisson. Questo metodo è
+applicabile in una varietà di ambiti, come lo stereo
+fotometrico[#Nehab:2005aa][], la rimozione di riflessi[#Agrawal:2005aa][], la
+rimozione di ombre[#Finlayson:2006aa][], per i quali son mostrati le
+applicazioni in questo documento, ed altri.
+
+Il filtraggio guidato[#He:2013aa][] è una tecnica di filtraggio esplicita
+altamente efficiente ed in grado di ottenere risultati spesso migliori dei
+filtri classici, oltre a permettere nuove applicazioni del filtraggio tramite
+la definizione implicita di kernel traslazione-varianti.  Per il corretto
+funzionamento del filtraggio in molte di queste nuove applicazioni (in
+particolare, riduzione del rumore e tone-mapping) è importante che l'immagine
+guida sia perfettamente allineata con l'immagine in input, pena la comparsa di
+sfumature e decolorazioni.
+
+Questo problema viene affrontato tramite la seconda tecnica qui proposta: una
+nuova variante del filtraggio guidato basata sulle corrispondenze tra
+covarianze in grado di rilassare il vincolo sull'allineamento ed ottenere
+buoni risultati anche in caso l'immagine in input e l'immagine guida non siano
+ben allineate. Il metodo proposto non è comunque privo di difetti, e può
+causare la comparsa di artefatti in regioni di colore costante. Per questo
+motivo viene descritta inoltre una tecnica di combinazione delle due tipologie
+di filtraggio guidato basata sulla classificazione delle regioni delle
+immagini migliori per ognuno dei due metodi. Come applicazione del metodo
+proposto viene mostrata la combinazione di immagini con/senza
+flash[#Petschnigg:2004aa][].
+
+<!-- \end{abstract} -->

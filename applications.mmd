@@ -1,0 +1,793 @@
+Applicazioni del Modello Lineare Locale [sec:llm-applications]
+==============================================================
+
+## Inter-conversione tra Vettori Normali e Gradienti [sec:llm-applications-gdo]
+
+Nel caso dello stereo fotometrico convenzionale, $z_i$ in
+[](#eq:gdo-relationship) viene trattata come incognita mentre $\vect{n}_i$ è
+dato da uno step di stima effettuato in precedenza. Per ottenere i valori
+ottimi $z^*_i$, viene risolta la seguente equazione di Poisson:
+\\[\label{eq:gdo-poisson}
+\arg\min_z\sum_i\left\|\nabla z_i-\vect{n}'_i\right\|^2_2+C
+\\]
+dove $C$ riassume i termini di regolarizzazione che, per semplicità, non
+verranno trattati in questa sezione. Il valore ottimo $z^*_i$ viene ottenuto
+ponendo a zero la prima derivata di [](#eq:gdo-poisson), ottenendo:
+\\[\label{eq:gdo-solution}
+z^*_i = (\transp{\nabla^*}\nabla)^{-1}(\transp{\nabla^*}\vect{n}'_i)
+\\]
+dove $\transp{\nabla^*} = \transp{[\partial^*_x \partial^*_y]}$ indica la
+derivata all'indietro quando $\nabla$ è definito come derivata in avanti.
+[](#eq:gdo-solution) è calcolabile in modo efficiente sfruttando la
+trasformata di Fourier [#Finlayson:2006aa][].
+
+La risoluzione di questo problema può essere effettuata applicando il LLM di
+[](#eq:llm-space) al posto [dell'equazione di Poisson](#eq:gdo-poisson),
+ottenendo il risultato mostrato in [](#eq:llm-space-system).
+
+Come altro caso di GDO, viene considerata la situazione in cui $z_i$ sono noti
+e si intende ricostruire l'immagine $\widehat{z}_i$ da una versione modificata
+dei suoi gradienti $\nabla \widehat{z}_i = f(\nabla z_i)$, ossia risolvendo:
+\\[\label{eq:gdo-restoration}
+\arg\min_{\widehat{z}} \sum_i \left\| \nabla \widehat{z}_i - f(\nabla z_i)
+\right\|^2_2
+\\]
+Questo problema è risolvibile, come descritto sopra, utilizzando
+[](#eq:llm-space-system) ma richiede prima il calcolo dei gradienti $\nabla
+z_i$. Mentre i metodi convenzionali utilizzano i valori ottenuti tramite
+filtri con corta o lunga risposta all'impulso---e.g., differenze finite in
+avanti o indietro tra due pixel oppure filtri più tolleranti al rumore come
+filtri di Sobel, di [#Scharr:2000aa;][] od altri[#Shen:2009aa][]---, è
+possibile ottenere i gradienti applicando il LLM come descritto in
+[](#eq:llm-space-solution-n).
+
+## Applicazione alla Rimozione di Riflessi [sec:llm-applications-reflection]
+
+Come applicazione possibile del metodo, viene mostrata l'applicazione del
+metodo al problema della *self reflection removal* descritto in
+[#Agrawal:2005aa][]. Il problema si presenta quando vengono scattate
+fotografie attraverso vetri a soggetti illuminati in posti scuri: lo scatto di
+una fotografia senza flash presenta rumore dovuta all'alta sensibilità ISO
+necessaria e, in particolare, spesso accade che il fotografo venga riflesso
+dal vetro; l'utilizzo del flash risolve questi problemi ma satura
+l'illuminazione originale della scena. Lo scopo è quindi la ricostruzione di
+un'immagine pulita come quella con il flash ma con i colori naturali
+dell'immagine senza flash.
+
+Chiamando $A$ l'immagine senza flash e $F$ l'immagine con il flash, una coppia
+di gradienti di luminanza ideali al pixel $i$ e per il colore $c\in\{r, g, b\}$
+viene denotata come $\{\nabla \widehat{A}^c_i, \nabla \widehat{F}^c_i\}$.
+In situazioni pratiche, compaiono degli offset $\{\nabla R^c_{A_i}, \nabla
+R^c_{F_i}\}$ a causa di riflessi e rumore. I gradienti $\{\nabla A^c_i, \nabla
+F^c_i\}$ osservati risultano quindi esprimibili dalla seguente relazione:
+\\[\label{eq:reflection-relationship}
+\begin{cases}
+  \nabla A^c_i = \nabla \widehat{A}^c_i + \nabla R^c_{A_i} \\
+  \nabla F^c_i = \nabla \widehat{F}^c_i + \nabla R^c_{F_i} \\
+\end{cases}
+\\]
+dove il nostro obiettivo è di ottenere $\widehat{A}^c_i$.  
+Per la risoluzione del problema vengono effettuate due assunzioni:
+
+ 1. L'immagine con flash non include artefatti ($\nabla R^c_{F_i} = 0$) ed è
+    ottenuta come riscalatura dell'immagine originale: $\nabla \widehat{F}^c_i
+    = \nabla F^c_i = k^c_i \nabla \widehat{A}^c_i$
+ 2. I vettori di offset sono ortogonali ai gradienti ideali, ossia $\nabla
+    \widehat{A}^c_i \nabla R^c_i = 0$.
+
+Sulla base di queste assunzioni, pre-moltiplicando
+[](#eq:reflection-relationship) per $\transp{\nabla F^c_i}$, si ottiene:
+\\[\label{eq:reflection-calculations}
+\begin{cases}
+  \transp{\nabla F^c_i} \nabla A^c_i = \transp{\nabla F^c_i} \nabla
+    \widehat{A}^c_i + \transp{\nabla F^c_i} \nabla R^c_{A_i} \\
+  \|\nabla F^c_i\|^2_2 = k^c_i \transp{\nabla F^c_i} \nabla \widehat{A}^c_i \\
+\end{cases}
+\\]
+Si può notare che, in quanto $\transp{\nabla \widehat{F}^c_i} = k^c_i
+\transp{\nabla \widehat{A}^c_i} \nabla R^c_{A_i} = 0$, la prima equazione può
+essere semplificata come $\transp{\nabla F^c_i} \nabla A^c_i = \transp{\nabla
+F^c_i} \nabla \widehat{A}^c_i$. Sostituendo questo risultato nella seconda
+equazione si ottiene $k^c_i = \frac{\|\nabla F^c_i\|^2_2}{\transp{\nabla
+F^c_i} \nabla A^c_i}$. Sostituendo nuovamente il valore di $k^c_i$ trovato
+all'interno della definizione data nella prima assunzione ($\nabla
+\widehat{A}^c_i = \frac{1}{k^c_i} \nabla F^c_i$), si ottiene infine la
+seguente relazione tra le due immagini:
+\\[\label{eq:reflection-solution}
+  \nabla \widehat{A}^c_i = \frac{\transp{\nabla F^c_i} \nabla A^c_i}{\|\nabla
+  F^c_i\|^2_2} \nabla F^c_i
+\\]
+Il problema è quindi risolvibile usando [](#eq:gdo-restoration) ponendo
+$\widehat{z}_i = \widehat{A}^c_i$ e $f(\nabla z_i) = \frac{\transp{\nabla
+F^c_i} \nabla A^c_i}{\|\nabla F^c_i\|^2_2} \nabla F^c_i$.
+
+Nell'applicazione del LLM per ottenere $\nabla \widehat{A}^c_i$, prima vengono
+calcolati i vettori normali delle immagini $A$ ed $F$ usando
+[](#eq:llm-space-solution-n), successivamente vengono calcolati i gradienti
+$\nabla \widehat{A}^c_i$ usando [](#eq:reflection-solution) ed infine viene
+ricostruita l'immagine originale risolvendo [](#eq:llm-space-system) con il
+CG.
+
+## Applicazione alla Rimozione di Ombre
+
+Una ulteriore possibile applicazione del metodo è la *rimozione di ombre*,
+descritto in [#Finlayson:2006aa,Shor:2008aa;][]. Il problema si può
+presentare in applicazioni *artistiche*, ossia quando si intende rimuovere
+fotografie da fotografie per motivi estetici, come ombre proiettate dal
+fotografo o causate dall'uso del flash, oppure in applicazioni di *computer
+vision*, come pre-elaborazione utile a semplificare ed incrementare la
+probabilità di successo di compiti come la segmentazione di immagini, il
+tracking, o il riconoscimento di oggetti.
+
+Per affrontare questo problema sono state analizzate le due differenti
+metodologie descritte da [#Finlayson:2009aa;][] e da [#Shor:2008aa][].
+
+### Rimozione di Ombre basata su immagini invarianti all'illuminazione
+
+Il metodo proposto da Finlayson [#Finlayson:2006aa,Finlayson:2009aa][] si
+incentra sul costruire una rappresentazione dell'immagine invariante rispetto
+al colore ed all'illuminazione ed utilizza questo risultato per rimuovere
+l'ombra dall'immagine originale, considerandola come una semplice diminuzione
+dei gradienti lungo il suo bordo. Per poter agire in questo modo vengono
+fatte alcune assunzioni sul processo di generazione dell'ombra.
+
+ 1. La prima assunzione è che l'immagine sia formata secondo un modello
+    Lambertiano, ossia che i valori di ogni pixel siano linearmente legate
+    all'intensità della luce incidente e che non vi siano effetti come
+    specularità o inter-riflessioni nell'immagine. Sotto questa assunzione, la
+    risposta dei sensori della fotocamera è esprimibile come:
+    \\[\label{eq:shadow-lambert}
+    \rho_k(x, y) = \sigma(x, y) \int E(\lambda, x, y) S(\lambda, x, y) Q_k
+    (\lambda) d\lambda
+    \\]
+    dove $E(\lambda, x, y)$ denota la SPD della luce, $S(\lambda, x, y)$ la
+    riflettanza della superficie, $Q(\lambda)$ la sensibilità spettrale del
+    $k$-esimo sensore ($k = 1, 2, 3$) e $\sigma(x, y)$ è un fattore costante
+    che denota il termine di ombreggiatura Lambertiano per un dato pixel.
+
+ 2. La seconda assunzione, che verrà successivamente rilassata, è che i
+    sensori della fotocamera che ha scattato la fotografia siano perfettamente
+    a banda stretta, vale a dire con risposta ad una singola lunghezza d'onda
+    della luce:
+    \\[\label{eq:shadow-delta}
+    Q_k(\lambda) = q_k \delta(\lambda - \lambda_k)
+    \\]
+
+ 3. La terza ed ultima assunzione è che gli illuminanti della scena siano
+    Planckiani. Modellando l'illuminazione tramite l'approssimazione di Wien
+    della legge di Planck [#Wyszecki:1982aa][], questa assunzione significa
+    che la SPD dell'illuminante può essere espressa in funzione della
+    temperatura $T$:
+    \\[\label{eq:shadow-planck}
+    E(\lambda, T) = I c_1 \lambda^{-5} e^{-\frac{c_2}{T\lambda}}
+    \\]
+    dove $c_1$ e $c_2$ sono costanti ed $I$ è una variabile che controlla
+    l'intensità della luce.
+
+Basandosi su queste assunzioni, si può esprimere la risposta dei sensori in
+modo approssimato sostituendo [](#eq:shadow-delta) in [](#eq:shadow-lambert) e
+[](#eq:shadow-planck) nel risultato ottenuto:
+\\[\label{eq:shadow-sensor}
+\rho_k = \sigma E(\lambda_k) S(\lambda_k) q_k = \sigma I c_1 \lambda^{-5}_k
+e^{-\frac{c_2}{T \lambda_k}} S(\lambda_k) q_k
+\\]
+dove la dipendenza di $\rho_k$ dalla posizione nello spazio viene
+temporaneamente ignorata.
+
+Formando il vettore di cromaticità $\vect{\chi}$ come rapporto tra bande, si
+può notare che vengono rimosse le informazioni riguardanti l'intensità e
+l'ombreggiatura:
+\\[\label{eq:shadow-chromaticities}
+\chi_j = \frac{\rho_k}{\rho_p} = \frac{\lambda^{-5}_k
+e^{\frac{c_2}{T\lambda_p}} S(\lambda_p) q_p}{\lambda^{-5}_p
+e^{\frac{c_2}{T\lambda_p}} S(\lambda_p) q_p},\enspace{} k \in \{1, 2,
+3\},\enspace{} k \neq p,\enspace{} j = 1, 2
+\\]
+Calcolando il logaritmo $\vect{\chi}'$ di queste quantità, si ottiene:
+\\[\label{eq:shadow-log-chromaticities}
+\chi'_j = \log(\chi_j) = \log\left(\frac{s_k}{s_p}\right) + \frac{1}{T} (e_k -
+e_p)
+\\]
+dove $s_k = \lambda^{-5}_k S(\lambda_k) q_k$ e $e_k = -\frac{c_2}{\lambda_k}$.
+Rappresentando le log-cromaticità sotto forma vettoriale:
+\\[\label{eq:shadow-log-chromaticities-vector}
+\vect{\chi}' = \vect{s} + \frac{1}{T} \vect{e}
+\\]
+si può notare che sono composte da due termini: $\vect{s}$, dipendente dalla
+superficie e dalla camera ma indipendente dall'illuminante e $\vect{e}$,
+indipendente dalla superficie, ma ancora dipendente dalla fotocamera.
+
+Osservando questa rappresentazione, si può osservare che, al variare della
+temperatura dell'illuminazione, il vettore delle log-cromaticità
+$\vect{\chi}'$ si muove lungo una linea dritta, con caratteristiche dipendenti
+solamente dalla fotocamera. Ciò significa che, riuscendo a determinare la
+direzione della variazione (il vettore $\vect{e}$), si può determinare
+una rappresentazione monodimensionale indipendente dall'illuminazione
+proiettando le log-cromaticità sul vettore ortogonale $\ortho{\vect{e}}$:
+\\[\label{eq:shadow-invariant}
+\mathcal{I}' = \transp{\vect{\chi}'} \ortho{\vect{e}},\quad
+\mathcal{I} = \exp(\mathcal{I}')
+\\]
+
+Per rimuovere qualsiasi polarizzazione dovuta alla scelta del canale di colore
+da utilizzare come denominatore nella definizione delle cromaticità, si può
+utilizzare la media geometrica $\rho_M = \sqrt[3]{R \times G \times B}$ in
+[](#eq:shadow-chromaticities) al posto di $\rho_p$, mantenendo comunque la
+dipendenza lineare. Così facendo si ottiene un vettore tridimensionale ed i
+rapporti giacciono su un piano ortogonale a $\vect{u} = \transp{[1, 1, 1]}$.
+
+Questa derivazione, descritta in [#Finlayson:2006aa][], si basa su una profonda
+conoscenza[^SensorResponseFinlayson] dei sensori della fotocamera,
+informazione spesso non disponibile.  Nel caso generico, l'immagine
+indipendente dall'illuminazione è comunque ottenibile, come descritto in
+[#Finlayson:2009aa,Finlayson:2004aa][], analizzando l'entropia di varie
+proiezioni delle log-cromaticità sui possibili $\ortho{\vect{e}}$.  L'idea
+fondamentale è che, anche senza aver disponibili più fotografie per la
+calibrazione dell'algoritmo, una proiezione delle log-cromaticità nella
+corretta direzione causa la minimizzazione dell'entropia dell'immagine
+monodimensionale risultante. Il metodo proposto è quindi, nella versione più
+semplice, attraversare tutti i possibili orientamenti tra $\SI{0}{\degree}$ e
+$\SI{180}{\degree}$ e proiettare $\vect{\chi}$ in quella direzione: per ogni
+angolazione si può calcolare applicare la definizione di entropia di Shannon
+dopo aver calcolato l'istogramma dell'immagine, utilizzato come metodo di
+quantizzazione.  Dividendo l'istogramma per il numero di elementi in modo da
+ottenere delle probabilità $p_i$, l'entropia è calcolabile come:
+\\[\label{eq:shadow-entropy}
+\eta = \sum^N_{i=1} -p_i \log_2(p_i)
+\\]
+
+La rappresentazione invariante all'illuminazione descritta riesce a rimuovere
+le ombre, ma ciò facendo viene rimossa anche l'informazione sul colore
+dell'immagine. Osservando che il processo per ricavare questa rappresentazione
+consiste nel proiettare i vari punti delle log-cromaticità lungo la retta di
+direzione $\ortho{\vect{e}}$, si può provare a rappresentare il punto in cui
+ogni pixel viene proiettato tramite le sue coordinate sul piano, mantenendo
+così qualche informazione sul colore. Per fare ciò viene costruita
+un'invariante all'illuminazione bidimensionale sfruttando la matrice di
+proiezione $P_{\ortho{\vect{e}}}$, definita come:
+\\[\label{eq:shadow-projector-matrix}
+P_{\ortho{\vect{e}}} = \ortho{\vect{e}} \transp{\ortho{\vect{e}}}
+\\]
+ed applicandola come segue:
+\\[\label{eq:shadow-bicolour-invariant}
+\widetilde{\vect{\chi}}' = P_{\ortho{\vect{e}}} \vect{\chi}'
+\\]
+
+Questo progresso, pur essendo molto utile, risulta comunque in un'immagine dai
+colori innaturali e mancante dell'informazione sull'intensità. In molte
+applicazioni è preferibile avere un'immagine identica all'originale, ad
+eccezione delle ombre, ma per ottenere ciò bisogna adottare strategie
+differenti. L'algoritmo proposto da [#Finlayson:2006aa,Finlayson:2009aa][]
+prende spunto dai metodi di *lightness recovery*[^LightnessRecovery]: questi
+algoritmi ricevono in ingresso un'immagine a colori tridimensionale e
+restituiscono due immagini intrinsiche: una basata sulla riflettanza
+(l'immagine *lightness*) e l'altra sull'illuminazione. Il calcolo della
+lightness si basa sull'assunzione che l'illuminazione vari lentamente lungo
+un'immagine dove i cambiamenti nella riflettanza sono lenti. Da questo segue
+che ponendo una soglia sulla derivata dell'immagine, è possibile rimuovere
+cambiamenti lenti ed il risultato è ottenibile dall'integrazione di questa
+immagine.
+
+Dato che le ombre consistono in cambiamenti tendenzialmente rapidi
+dell'illuminazione, queste non sono rimosse nell'immagine lightness ma,
+applicando questa idea alle due immagini disponibili nel problema della
+rimozione delle ombre---l'immagine 3-d originale e l'immmagine 2-d priva di
+ombre---è possibile distinguere i bordi di oggetti materiali dai bordi di
+ombre ed eliminarli di conseguenza.
+
+Il metodo proposto da [#Finlayson:2006aa;][] consiste quindi
+nell'identificazione e nel confronto dei bordi in ognuna delle due immagini:
+quelli scomparsi nell'immagine sono trattati come bordi delle ombre e la
+derivata dell'immagine originale lungo di essi viene posta a zero. Un metodo
+iterativo viene proposto per effettuare un'integrazione dell'immagine che
+includa anche un semplice processo di inpainting[^Inpainting] dei bordi
+rimossi.
+
+La strategia proposta prevede un'alternanza tra integrazione e smussatura dei
+gradienti del bordo, in modo da ammorbidire il passaggio dalla regione in luce
+alla regione in ombra ristorata. Il LLM è applicabile in questa fase del
+metodo, sostituendolo il calcolo dei gradienti e la loro integrazione in ogni
+passaggio dell'algoritmo, rispettive nelle forme di
+[](#eq:llm-space-solution-n) ed [](#eq:llm-space-system)).
+
+Purtroppo questo metodo di rilevamento delle ombre è molto sensibile ai
+parametri utilizzati ed alla qualità dell'immagine in ingresso. L'immagine
+indipendente dall'illuminazione presenta inoltre bordi leggermente alterati
+rispetto all'immagine originale, rendendo difficile la corrispondenza tra i
+contorni delle due immagini e, quindi la corretta identificazione dei
+contorni delle ombre. Ulteriori problemi sono riscontrabili quando le ombre
+da eliminare non consistono nette variazioni dell'illuminazione, bensì in
+sfumate, ampie anche pochi pixel: risulta necessario definire ad-hoc la
+larghezza dell'area in cui la derivata viene posta a zero (pena l'incompleta
+rimozione dell'ombra) e l'utilizzo di ampiezze troppo elevate comporta
+difficoltà nella ricostruzione con qualità apprezzabile, causando la perdita
+della texture dell'immagine lungo il bordo dell'ombra.
+
+Per questi motivi non è stato possibile applicare il LLM al problema della
+rimozione delle ombre seguendo questo metodo e si è scelto di affrontare il
+problema seguendo l'idea proposta da [#Shor:2008aa;][], descritta nella
+sezione seguente.
+
+### Rimozione di Ombre basata su piramidi Laplaciane
+
+Il metodo proposto da [#Shor:2008aa;][] si basa sull'identificazione
+dell'ombra e della sua superficie, ed il restauro della prima tramite la stima
+di un modello di formazione delle ombre.
+
+#### Identificazione della regione dell'ombra
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.22\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_source.png}
+    \caption{Originale}\label{fig:llm-shadow-seed-a}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.22\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_seed.png}
+    \caption{Shadow seed}\label{fig:llm-shadow-seed-b}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.22\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_surface_mask.png}
+    \caption{Superficie}\label{fig:llm-shadow-seed-c}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.22\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_surface.png}
+    \caption{Superficie}\label{fig:llm-shadow-seed-d}
+  \end{subfigure}
+  \caption{Determinazione della superficie dell'ombra da
+  rimuovere}\label{fig:llm-shadow-seed}
+  \medskip
+  \small
+  -->
+  Da un punto indicato nell'immagine originale (a) viene determinato il
+  *shadow seed* (b). Dalla soglia determinata in [](#fig:llm-shadow-histogram)
+  si deriva la maschera (c), corrispondente nell'immagine a (d).
+  <!--
+\end{figure}
+-->
+
+Per l'identificazione dell'ombra è richiesto un minimo input da parte
+dell'utente, il quale deve specificare un punto dell'ombra. L'algoritmo,
+innanzitutto, espande la regione tramite region growing---il risultato di
+questo processo è una patch che viene denominata [*shadow
+seed*](#fig:llm-shadow-seed-b)---ed identifica nell'immagine la superficie su
+cui giace la parte dell'ombra selezionata sfruttando un'idea simile
+all'invarianza all'illuminazione proposta da [#Finlayson:2002aa;][]:
+utilizzando il colore mediano della regione selezionata come riferimento,
+viene calcolata la sua distanza da ogni pixel definita come:
+\\[\label{eq:shadow-distance}
+1 - | \cos(\theta) |
+\\]
+dove $\theta$ è l'angolo tra il vettore tridimensionale rappresentante il
+colore del pixel in analisi e quello corrispondente al colore di riferimento.
+L'intuizione dietro a questa metrica è che il colore di punti con riflettanza
+simile corrisponda a vettori circa collineari e che la presenza dell'ombra
+comporti principalmente una riduzione della loro norma. Questa osservazione è
+stata sfruttata anche da [#Omer:2004aa;][] riguardo alle color-lines.
+
+<!--
+\begin{figure}
+  \centering
+  \input{images/shadow_histogram.tikz}
+  \caption{Istogramma delle distanze}\label{fig:llm-shadow-histogram}
+  \medskip
+  \small
+  In verde sono indicati i principali massimi locali dell'istogramma, in rosso
+  il valore scelto come soglia.
+  Le distanze sono calcolate utilizzando -->[](#eq:shadow-distance)<!--. \\
+\end{figure}
+-->
+
+Osservando l'istogramma delle distanze (e.g., [](#fig:llm-shadow-histogram)),
+si può notare la presenza, solitamente, di un picco a distanza prossima a
+zero, corrispondente alla superficie su cui giace l'ombra. Impostando una
+soglia sulla distanza al primo minimo dell'istogramma dopo questo picco, è
+possibile quindi classificare i pixel appartenenti alla stessa superficie
+dell'ombra ([](#fig:llm-shadow-seed-c), [](#fig:llm-shadow-seed-d)). Nella
+pratica, capita spesso che compaiano due picchi: uno a distanza prossima a
+zero rappresentante i pixel corrispondenti alla parte di superficie su cui
+giace l'ombra ed uno a distanza leggermente maggiore, corrispondente ai pixel
+appartenenti alla parte di superficie illuminata. Per questo motivo si è
+deciso di utilizzare come valore di soglia il [primo minimo della derivata
+prima dopo il secondo massimo dell'istogramma](#fig:llm-shadow-histogram). 
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_region.png}
+    \caption{Regione in ombra}\label{fig:llm-shadow-mask-a}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_light_region.png}
+    \caption{Regione in luce}\label{fig:llm-shadow-mask-b}
+  \end{subfigure}
+  
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_trimap.png}
+    \caption{Trimap}\label{fig:llm-shadow-mask-c}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_alpha.png}
+    \caption{Alpha matting}\label{fig:llm-shadow-mask-d}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_mask.png}
+    \caption{Maschera finale}\label{fig:llm-shadow-mask-e}
+  \end{subfigure}
+  \caption{Determinazione della maschera dell'ombra da
+    rimuovere}\label{fig:llm-shadow-mask}
+  \medskip
+  \small
+  -->
+  La superficie di [](#fig:llm-shadow-seed-c) viene divisa in regione
+  in ombra (a) e regione in luce (b).  
+  La maschera viene raffinata applicando l'image matting [#Levin:2008aa][]
+  alla trimap (c), ottenendo (d). La maschera finale (e) viene ottenuta
+  applicando una soglia $\alpha = 0.5$ a (d).
+  <!--
+\end{figure}
+-->
+
+Il passo successivo consiste nella divisione della superficie tra [parte
+effettivamente ombreggiata e parte illuminata](#fig:llm-shadow-mask); ciò
+viene fatto nuovamente con un processo di region growing, questa volta
+utilizzando solo i punti ottenuti dal passo precedente e, ad ogni iterazione,
+estendendo la patch corrispondente al shadow seed. Queste iterazioni di region
+growing utilizzano una regola di terminazione aggiuntiva rispetto alle
+versioni classiche, ossia viene richiesto che venga preservata la condizione
+che la varianza della parte in ombra resti inferiore alla varianza della parte
+illuminata:
+\\[\label{eq:shadow-variance-rg}
+\Var[I(M_s)] \leq \Var[I(M_l)]
+\\]
+dove $M_s$ ed $M_l$ sono rispettivamente la maschera dei pixel della
+superficie ombreggiata e della superficie illuminata.
+
+La maschera corrispondente all'ombra da eliminare viene poi completata
+includendo tutte le regioni dell'immagine non appartenenti a $M_l$ circondate
+da pixel identificati come appartenenti a $M_s$ ed infine raffinata tramite
+l'algoritmo di image matting descritto in [#Levin:2008aa][]: viene costruita
+[una *trimap*](#fig:llm-shadow-mask-c) indicante le regioni certamente
+appartenenti all'ombra (nell'implementazione, questa regione corrisponde alla
+versione di $M_s$ completata e leggermente erosa), certamente non appartenenti
+all'ombra (corrispondente al complemento di una leggera dilatazione della
+versione di $M_s$ completata) e le regioni ignote (tutti i punti restanti). Al
+risultato dell'[image matting](#fig:llm-shadow-mask-d) viene poi applicata una
+soglia $\alpha = 0.5$ per ottenere la maschera binaria finale, denominata
+[$M_{shadow}$](#fig:llm-shadow-mask-e).
+
+#### Ristorazione dell'ombra [sec:llm-applications-shadow]
+
+<!-- \todo{Notation consistency with Finlayson} -->
+Il modello di formazione dell'immagine utilizzato in questo metodo è quello
+descritto da [#Barrow:1978aa;][]:
+\\[\label{eq:shadow-barrow}
+I(x, \lambda) = L(x, \lambda)R(x, \lambda)
+\\]
+dove $I(x, \lambda)$ è l'intensità riflessa da un punto $x$ della scena ad una
+lunghezza d'onda $\lambda$, mentre $L$ ed $R$ sono rispettivamente
+l'illuminazione e la riflettanza per lo stesso punto e lunghezza d'onda.
+Questo modello assume uno scenario dove le ombre proiettate siano dovute ad
+una singola sorgente di illuminazione (come il sole in scene all'aperto). Se
+un punto $x$ nella scena è privo di ombra, la sua illuminazione è esprimibile
+come somma dell'illuminazione diretta $L^d$ e dell'illuminazione indiretta
+$L^a$, dovuta all'ambiente:
+\\[\label{eq:shadow-lit-point-illumination}
+L(x, \lambda) = L^d(x, \lambda) + L^a(x, \lambda)
+\\]
+\\[\label{eq:shadow-lit-point}
+I^{lit}(x, \lambda) = L^d(x, \lambda)R(x, \lambda) + L^a(x, \lambda)R(x,
+\lambda)
+\\]
+
+Supponendo che l'ombra sia causata dalla presenza di un oggetto nella scena
+che occlude la sorgente primaria di luce, proiettando così un'ombra sul punto
+$x$, l'intensità riflessa da questo punto risulta quindi:
+\\[\label{eq:shadow-unlit-point}
+I^{shadow}(x, \lambda) = a(x)L^a(x, \lambda)R(x, \lambda)
+\\]
+dove $a(x)$ è un fattore spazio-variante che tiene conto dell'attenuazione
+dell'illuminazione dell'ambiente, ulteriore effetto della presenza
+dell'occlusore. Qui viene assunto che l'illuminazione ambientale abbia
+pressoché la stessa SPD per qualsiasi direzione incidente, altrimenti il
+termine $a$ dovrebbe dipendere anche dalla lunghezza d'onda $\lambda$.
+
+Combinando le ultime due equazioni possiamo esprimere l'intensità su un punto
+illuminato in come funzione affine dell'intensità dello stesso punto se fosse
+presente un'ombra:
+\\[\label{eq:shadow-lit-unlit-relation}
+I^{lit}(x, \lambda) = L^d(x, \lambda)R(x, \lambda) + \frac{1}{a(x)}
+I^{shadow}(x, \lambda)
+\\]
+Quando la scena viene fotografata, il colore del pixel $p$ corrispondente al
+punto $x$ per la scena viene ottenuto integrando $I(x, \lambda)$ con la
+risposta spettrale del sensore della fotocamera. Essendo questa operazione
+lineare, la natura affine della relazione tra pixel con e senza ombra non
+cambia, risultando quindi in:
+\\[\label{eq:shadow-affine}
+I^{lit}_k(p) = \alpha_k(p) + \gamma(p) I^{shadow}_k(p)
+\\]
+dove $\alpha_k$, $k\in\{R, G, B\}$, è la risposta della fotocamera
+all'illuminazione diretta riflessa lungo i tre canali *RGB*, e $\gamma(p) =
+\frac{1}{a(x)}$ è l'inverso del fattore di attenuazione dell'ambiente che,
+sotto le assunzioni fatte, non dipende dalla lunghezza d'onda ed è quindi
+costante attraverso i tre canali.
+
+[](#eq:shadow-affine) può essere sfruttata per ricostruire un pixel illuminato
+dal suo colore sottoposto ad ombra stimando quattro parametri. Questo viene
+fatto analizzando due regioni dell'immagine, una illuminata ed una
+ombreggiata, e sfruttando le medie e le deviazioni standard delle luminanze
+dei pixel corrispondenti---o con colore appartenente con sufficiente frequenza
+ai colori della rispettiva maschera---alla superficie dell'ombra:
+\\[\label{eq:shadow-parameters-gamma}
+\gamma = \frac{\sigma(\mathcal{L})}{\sigma(\mathcal{S})}
+\\]
+\\[\label{eq:shadow-parameters-alpha}
+\alpha_k = \mean{\mathcal{L}} - \gamma \mean{\mathcal{S}}, \quad k \in \{R, G,
+B\}
+\\]
+dove $\mathcal{L}$ ed $\mathcal{S}$ sono le versioni estese come scritto sopra
+delle maschere $M_l$ ed $M_s$. Questo metodo di restauro ricalca il metodo di
+trasferimento del colore proposto da [#Reinhard:2001aa;][] ed utilizzato anche
+da [#Wu:2007aa;][]. [](#fig:llm-shadow-restoration-a) mostra il risultato
+dell'utilizzo di questo metodo per il recupero dell'ombra di
+[](#fig:llm-shadow-seed).
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_result_simple.png}
+    \caption{Ristorazione -->"*naïve*"<!--}\label{fig:llm-shadow-restoration-a}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_result_pyramid.png}
+    \caption{Ristorazione piramidale}\label{fig:llm-shadow-restoration-b}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_result_nonuniform.png}
+    \caption{Ristorazione non-uniforme}\label{fig:llm-shadow-restoration-c}
+  \end{subfigure}
+  \caption{Ristorazione dell'ombra}\label{fig:llm-shadow-restoration}
+  \medskip
+  \small
+  -->
+  L'[immagine originale](#fig:llm-shadow-seed-a) viene restaurata applicando
+  semplicemente il modello di [](#eq:shadow-affine), ottenendo (a).
+  Effettuando il restauro su [ogni livello della piramide
+  Laplaciana](#fig:llm-shadow-pyramid), si ottiene (b) e, raffinando
+  ulteriormente il recupero lavorando su strisce concentriche nel livello più
+  grossolano, si ottiene (c).
+  <!--
+\end{figure}
+-->
+
+##### Ristorazione basata su piramidi
+
+Semplicemente stimando il modello [una volta sola per ogni pixel
+dell'ombra](#fig:llm-shadow-restoration-a) può causare la comparsa di due
+artefatti:
+
+ 1. La texture della regione recuperata risulta avere un contrasto minore
+    della regione originariamente illuminata.
+
+    Un motivo per questo problema è l'illuminazione diretta direzionale
+    nell'area senza ombra comporta un contrasto maggiore dell'illuminazione
+    indiretta emisferica nell'area con ombra. Inoltre, né questo modello né il
+    precedente tengono conto che regioni con texture articolate presentano
+    spesso un fenomeno denominato *self-shadowing*[^SelfShadowing] anche nelle
+    regioni illuminate.
+
+ 2. Il secondo artefatto è dovuto al rumore: la regione ombreggiata è più
+    prona al rumore delle aree circostanti e una semplice riscalatura dei
+    valori tende ad esaltare questo problema. Questo effetto è particolarmente
+    evidente quando vengono restaurate ombre proiettate su superfici scure o
+    lisce.
+
+<!--  
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.22\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_source_plevel1.png}
+
+    \includegraphics[width=\textwidth]{shadow_result_plevel1.png}
+    \caption{}\label{fig:llm-shadow-pyramid-a}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.22\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_source_plevel2.png}
+
+    \includegraphics[width=\textwidth]{shadow_result_plevel2.png}
+    \caption{}\label{fig:llm-shadow-pyramid-b}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.22\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_source_plevel3.png}
+
+    \includegraphics[width=\textwidth]{shadow_result_plevel3.png}
+    \caption{}\label{fig:llm-shadow-pyramid-c}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.22\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_source_plevel4.png}
+
+    \includegraphics[width=\textwidth]{shadow_result_plevel4.png}
+    \caption{}\label{fig:llm-shadow-pyramid-d}
+  \end{subfigure}
+  \caption{Ristorazione tramite piramide
+    Laplaciana}\label{fig:llm-shadow-pyramid}
+  \medskip
+  \small
+  -->
+  Nella riga superiore viene mostrato ogni livello (dal più fine (a) al più
+  grossolano (d)) della scomposizione Laplaciana dell'immagine originale.  
+  Nella riga inferiore viene mostrato il corrispondente livello restaurato
+  secondo [](#eq:shadow-affine).
+  <!--
+\end{figure}
+-->
+
+La strategia adottata per affrontare questi problemi è di effettuare la stima
+dei parametri ed il restauro dell'ombra utilizzando una [piramide
+Laplaciana](#fig:llm-shadow-pyramid) come rappresentazione dell'immagine:
+vengono calcolate la rappresentazione piramidale dell'immagine e le versioni
+sotto-campionate delle maschere, e, per ogni livello, viene effettuato il
+restauro come descritto sopra. Il risultato ottenuto ricomponendo la piramide
+restaurata è mostrato in [](#fig:llm-shadow-restoration-b).
+
+Questo procedimento permette di ridurre entrambi gli artefatti descritti
+sopra: da un lato, nelle regioni riguardanti le texture, il contrasto della
+trama viene aumentato lavorando sulle sue statistiche per renderle come quelle
+delle texture illuminate. Dall'altro lato, nelle regioni prive di texture,
+l'abbinamento delle statistiche con quelle delle aree illuminate più lisce
+tende a ridurre l'ampiezza del rumore.
+
+##### Trattamento di ombre non uniformi
+
+Un altro problema che è possibile affrontare con questo metodo, contrariamente
+al precedente, è la gestione di ombre non uniformi. Tipicamente, le ombre
+proiettate tendono a scurire avvicinandosi all'oggetto occludente: un semplice
+annullamento della derivata lungo il bordo lascerebbe questo effetto,
+risultando in un recupero incompleto dell'ombra. La strategia adottata
+consiste nell'effettuare la stima ed il restauro su [sottili strisce
+concentriche dell'ombra singolarmente](#fig:llm-shadow-restoration-c), invece
+che sull'intera maschera in un passaggio solo. Questo processo, visto
+l'aumento di iterazioni che comporta e, soprattutto, la sua utilità incentrata
+su variazioni graduali dell'ombra, viene applicato solamente della piramide
+corrispondente alle basse frequenze spaziali.
+
+Un miglioramento possibile di questa idea, benché un'ulteriore complicazione,
+potrebbe essere la suddivisione delle strisce stesse in sotto-segmenti. Questo
+permetterebbe di gestire meglio le variazioni dell'ombra e, soprattutto,
+terrebbe meglio conto dello scurirsi dell'ombra in direzione dell'oggetto
+occludente invece che verso il centro della stessa.
+
+##### Gestione del bordo dell'ombra [sec:llm-applications-shadow-border]
+
+Il bordo dell'ombra richiede un trattamento speciale, questo è dovuto
+principalmente a due cause:
+
+ 1. La maschera $M_{shadow}$ è tipicamente imprecisa lungo il bordo
+    dell'ombra. Questo è evidente se si pensa che il bordo di un'ombra può
+    essere sfocato lungo qualche pixel, mentre la maschera rappresenta una
+    distinzione netta tra regioni con e senza ombra.
+
+ 2. I bordi delle ombre corrispondono tipicamente  a rapidi cambiamenti di
+    luminosità e, benché la gestione tramite strisce riduca ampiamente l'area
+    da trattare, per un recupero efficace sarebbe necessaria una stima a
+    livello di singoli pixel, evidente controsenso con la natura statistica
+    del metodo.
+
+[#Shor:2008aa;][] propongono quindi un trattamento della regione tramite
+inpainting basato sulla sintesi di texture descritto da [#Kwatra:2003aa;][].
+Un'alternativa può essere il restauro della texture tramite algoritmi di
+Poisson image editing[#Sunkavalli:2010aa,Perez:2003aa][]. L'algoritmo viene
+utilizzato come strumento di seamless cloning---in particolare per il texture
+transfer---come descritto da [#Perez:2003aa;][]: la texture dell'immagine
+originale lungo il bordo dell'ombra viene imposta sull'immagine ristorata.
+Questa operazione permette di mantenere un'ottima qualità nei dettagli
+originali dell'immagine ed al contempo di restaurare implicitamente---anche se
+solo in modo parziale---l'ombra lungo il bordo.
+
+Adottando le convenzioni descritte all'inizio di [](#sec:llm), e chiamando
+$\vect{p}_i$ l'$i$-esimo pixel dell'immagine originale, $\vect{I}^*_i$
+l'$i$-esimo pixel dell'immagine da cui è stata rimossa l'ombra e $M_b$ la
+maschera rappresentante il bordo (ottenuta tramite dilatazione degli estremi
+di $M_{shadow}$), l'equazione di Poisson per ottenere l'immagine finale
+$\vect{I}$ risulta essere:
+\\[\label{eq:shadow-poisson}
+\arg\min_{\vect{I}|_{M_b}} \sum_i \sum_{j\in\Omega_i} \left(\vect{I}_i -
+\vect{I}_j - (\vect{p}_i - \vect{p}_j)\right)^2 \suchthat \vect{I}_i =
+\vect{I}^*_i,\enspace{} \forall i \not\in \Omega
+\\]
+Per i pixel esterni alla maschera, l'equazione consiste in una semplice
+identità (i.e., le intensità dei pixel di $\vect{I}^*$ vengono mantenute
+inalterati in $\vect{I}$). Per quanto riguarda i pixel $i$ interni alla
+maschera, invece, il loro valore è ottenibile risolvendo:
+\\[\label{eq:shadow-poisson-solution}
+|\Omega_i|\vect{I}_i - \sum_{j\in\Omega_i} \vect{I}_j = |\Omega_i|\vect{p}_i -
+\sum_{j\in\Omega_i} \vect{p}_j
+\\]
+Ciò risulta in un sistema sparso e definito positivo, risolvibile
+quindi direttamente. Quando $\Omega_i$ corrisponde ai pixel *4-adiacenti* ad
+$i$, [](#eq:shadow-poisson-solution) equivale a richiedere l'uguaglianza tra i
+gradienti calcolati tramite l'operatore di Laplace dell'immagine in uscita
+coincidano con quelli dell'immagine $\vect{p}$. Si noti che $i \in
+M_b \nimplies j \in M_b$, ossia che alcuni valori a sinistra dell'uguale in
+[](#eq:shadow-poisson-solution) sono soggetti al vincolo di
+[](#eq:shadow-poisson). Questo fa sì che venga comunque preservata continuità
+dei gradienti finali di $\vect{I}$ lungo i bordi di $M_s$.
+
+La risoluzione dell'[equazione di Poisson](#eq:shadow-poisson) tramite il LLM
+viene effettuata calcolando prima i gradienti di $\vect{p}$ secondo
+[](#eq:llm-space-solution-n) e poi ricostruendo l'immagine finale $\vect{I}$
+secondo [](#eq:llm-space-system). Per tener conto del vincolo aggiunto, è
+necessario apportare una modifica al metodo risolutivo basato sul Gradiente
+Coniugato per tener conto del vincolo aggiunto. Questa consiste nell'utilizzo
+dell'immagine $\vect{I}^*$ come stima iniziale della soluzione e
+nell'annullamento ad ogni iterazione dei residui per i pixel da mantenere
+fissi. Considerando queste condizioni al contorno, la soluzione risulta essere
+unica e ciò rende non necessaria la definizione del vettore di offset
+$\vect{v}$ di [](#eq:llm-space-offset).
+
+[^SensorResponseFinlayson]: [#Finlayson:2006aa;][] espone una metodologia per
+la stima di queste informazioni, ma ciò richiede di avere un set di immagini
+di superfici di riferimento (come una Macbeth Color Checker Chart, composta da
+19 superfici di differenti cromaticità) sotto una serie di $n$ luci
+differenti.
+
+[^LightnessRecovery]: La percezione del colore mostra un'alta correlazione con
+la riflettanza, anche se la quantità di luce visibile che raggiunge l'occhio
+dipende dal prodotto di riflettanza ed illuminazione. Il sistema visivo deve
+essere in grado di raggiungere questo risultato sfruttando uno schema che non
+misura il flusso e questo modello è descritto come base della teoria "retinex"
+da [#Land:1971aa;][] (il termine "retinex" è un portmanteau composto da
+"retina" e "cortex", per suggerire che in questo processo sono coinvolti sia
+occhi che cervello). Questa teoria assume che ci siano tre sistemi di coni
+indipendenti, ognuno con un picco di recettori per bande differenti (lunghe,
+medie e corte fasce di lunghezze d'onda dello spettro visibile). Ogni sistema
+forma un'immagine separata del mondo in termini di luminosità che mostra una
+forte correlazione con la riflettanza nella sua specifica banda di lunghezze
+d'onda. Queste immagini non vengono mescolate per ottenere il risultato
+finale, bensì confrontate per generare i colori percepiti. Vari metodi sono
+stati proposti per ottenere questi risultati a livello numerico
+(e.g., [#Land:1971aa,Blake:1985aa,Brelstaff:1987aa][]).  
+
+[^Inpainting]: L'__inpainting__ è un processo tramite il quale viene
+ricostruita dell'informazione mancante da un'immagine (ad esempio, dovuta a
+testo sovrascritto all'immagine, usura di vecchie immagini scansionate o, nel
+caso qui trattato, rimossa volontariamente) effettuata osservando i pixel
+circostanti l'area di applicazione dell'algoritmo.
+
+[^SelfShadowing]: Con __self-shadowing__ si intende la proiezione di ombre da
+parte di oggetti su sé stessi. Un esempio di questo fenomeno su scala fine può
+essere l'ombra generata da ogni filo d'erba su un prato, indispensabile per
+dare realismo all'immagine e tendenzialmente inutile ed impratica da rimuovere
+per applicazioni di computer vision.
+

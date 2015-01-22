@@ -1,0 +1,102 @@
+<!-- \appendix -->
+
+Matrice di Centratura Locale [apx:centering]
+============================================
+
+Definendo i vettori di campionamento $\vect{\delta}_i$ e $\vect{\mu}_i \in
+\set{R}^N$ come
+\\[
+\vect{\delta}_i(k) =
+  \begin{cases}
+    1 & \text{se } k = i \\
+    0 & \text{altrimenti}
+  \end{cases}
+\quad \text{e} \quad
+\vect{\mu}_i(k) =
+  \begin{cases}
+    \frac{w_{ik}}{\sum_j w_{ij}} & \text{se } k \in \Omega_i \\
+    0 & \text{altrimenti}
+  \end{cases}
+\\]
+in modo rispettivamente da estrarre l'elemento $i$-esimo e calcolare la media
+degli elementi appartenenti ad $\Omega_i$ di $\vect{z}$ se applicati come $z_i
+= \transp{\vect{\delta}_i} \vect{z}$ e $\mean{z}_i = \transp{\vect{\mu}_i}
+\vect{z}$ e le matrici di campionamento da essi derivanti $\vect{S}_i$ e
+$\vect{M}_i$
+\\[
+\vect{S}_i = \transp{[\vect{\delta}_{j_i}, \dotsc, \vect{\delta}_{j_M}]}
+\quad \text{e} \quad
+\vect{M}_i = \transp{[\vect{\mu}_{i}, \dotsc, \vect{\mu}_{i}]}
+\in \set{R}^{N \times M}
+\\]
+in grado di estrarre un set di elementi e medie locali come vettori
+$\vect{z}_i = \transp{[z_{j_1}, \dotsc, z_{j_M}]}$ e $\mean{\vect{z}}_i =
+\transp{[\mean{z}_i, \dotsc, \mean{z}_i]} \in \set{R}^M$ se pre-moltiplicati
+a $\vect{z}$ (i.e., $\vect{z}_i = \vect{S}_i \vect{z}$ e $\mean{\vect{z}}_i =
+\vect{M}_i \vect{z}$), è possibile definire una matrice di centratura locale
+come:
+\\[
+\vect{V}_i = \vect{S}_i - \vect{M}_i \implies
+\vect{V}_i \vect{z} \to \{z_j-\mean{z}_i \suchthat j \in \Omega_i\}
+\\]
+
+Calcolo efficiente di $\vect{z}$ [apx:efficient-z]
+==================================================
+
+[](#eq:llm-space-system) contiene un'enorme---anche se sparsa---matrice di
+dimensione $N\times4M$, precisamente in $\sum_i \transp{\vect{V}_i} \vect{W}_i
+\vect{V}_i$. Per questo è richiesto un metodo di calcolo efficiente in modo
+da ridurre la sua complessità e rendere la risoluzione dell'equazione un
+problema gestibile.
+
+Qui viene descritto il caso semplice in cui i pesi siano costanti ($w_{ij} =
+1$). In questo caso, i costi del calcolo possono essere ridotti drasticamente
+con l'aiuto del metodo dell'immagine integrale (*summed-area table*, o SAT)
+[#Crow:1984aa][]. Nel caso generico in cui i pesi $w_{ij} \geq 0$ siano
+adattivi su ogni patch, il calcolo è effettuabile filtrando ogni riga di
+$\transp{\vect{V}_i} \vect{W}_i \vect{V}_i$ come nel
+metodo descritto da [#Levin:2007aa;][].
+
+Quando tutti i pesi sono ignorabili, ossia $w_{ij} = 1$, l'operazione è
+semplificabile come $\transp{\vect{V}_i} \vect{W}_i \vect{V}_i =
+\transp{\vect{V}_i} \vect{V}_i$. Questa matrice risulta essere simmetrica e
+sparsa, con elementi nelle stesse posizioni di $\vect{V}_i$, i.e., gli
+elementi non nulli di $(\transp{\vect{V}_i} \vect{V}_i) \vect{x}$ coincidono
+con quelli di $\vect{V}_i \vect{x}$. Ogni elemento di $\widehat{\vect{x}}_i =
+a'_i (\transp{\vect{V}_i} \vect{V}_i) \vect{x}$ consiste quindi ancora in
+un'operazione di centratura:
+\\[
+\widehat{\vect{x}}_i(k) = 
+  \begin{cases}
+    a'_i(x_k - \mean{x}_i) & \text{se } k \in \Omega_i \\
+    0 & \text{altrimenti}
+  \end{cases}
+\\]
+Ciò significa che il $k$-esimo elemento di $\widehat{\vect{x}} = \sum_i
+\widehat{\vect{x}}_i$ può essere scritto come:
+\\[
+\widehat{\vect{x}}(k) = \sum_{i \in \Omega_j} a'_i (x_k - \mean{x}_i) =
+\left(x_k \sum_i a'_i\right) - \left(\sum_i a'_i \mean{x}_i\right)
+\\]
+Lo stesso ragionamento è applicabile agli altri termini con forma
+simile---i.e., $\sum_i b'_i (\transp{\vect{V}_i} \vect{V}_i) \vect{y}$ e
+$\sum_i (\transp{\vect{V}_i} \vect{V}_i) \vect{z}$
+sono calcolati nello stesso modo. [](#eq:llm-space-system) può quindi essere
+riscritta come:
+\\[
+\left(M z_k - \sum_{i\in\Omega_k} \mean{z}_k\right) = \left(x_k\sum_i
+a'_i\right) + \left(y_k \sum_i b'_i\right) + \sum_i (a'_i \mean{x}_i + b'_i
+\mean{x}_i)
+\\]
+Il calcolo delle sommatorie e delle medie può essere effettuato tramite box
+filtering e, inoltre, utilizzando il SAT, l'operazione di filtraggio può
+essere calcolata in $O(1)$, indipendentemente dalla dimensione della patch.
+Infine si può notare che, nel comune caso in cui la patch sia quadrata e
+centrata attorno al pixel $i$, i valori medi delle coordinate della patch
+coincidono con le coordinate del pixel $i$---i.e., $\mean{x}_i \to x_i$ e
+$\mean{y}_i \to y_i$.
+
+Questa ottimizzazione rende implicita la definizione della matrice $\vect{A} =
+\sum_i \vect{U}_i$ e pertanto obbligatoria la ricerca di una soluzione tramite
+metodi indiretti, come il Gradiente Coniugato.
+

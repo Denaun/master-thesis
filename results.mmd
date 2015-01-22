@@ -1,0 +1,506 @@
+Risultati sperimentali
+======================
+
+## Modello Locale Lineare [sec:llm-results]
+
+In questa sezione, verranno descritti alcuni risultati di applicazioni del LLM
+e verranno confrontati i risultati ottenibili convenzionalmente tramite la
+risoluzione delle corrispondenti equazioni di Poisson.
+
+Le applicazioni trattate sono quelle descritte in [](#sec:llm-applications),
+ossia [stereo fotometrico](#sec:llm-applications-gdo), [rimozione di
+riflessi](#sec:llm-applications-reflection), e [rimozione di
+ombre](#sec:llm-applications-shadow); mentre i metodi utilizzati come
+confronto sono la differenza finita in avanti e l'operatore di
+[#Scharr:2000aa;][] $3\times3$.
+
+### Inter-conversione di Luminanza e Gradienti
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.135\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{phtmt_original_1.eps}
+    \medskip
+    \small
+
+    \includegraphics[width=\textwidth]{phtmt_original_2.eps}
+    \medskip
+    \small
+    \SI{26.0}{\decibel}
+    \caption{Originale}\label{fig:llm-stereo-a}
+  \end{subfigure}
+  \begin{subfigure}[b]{.135\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{phtmt_result_11_nmap.eps}
+    \medskip
+    \small
+
+    \includegraphics[width=\textwidth]{phtmt_result_21_nmap.eps}
+    \medskip
+    \small
+    \caption{$\nabla z$\,Scharr}\label{fig:llm-stereo-b}
+  \end{subfigure}
+  \begin{subfigure}[b]{.135\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{phtmt_result_11_conv.eps}
+    \medskip
+    \small
+    \SI{12.8}{\decibel}
+
+    \includegraphics[width=\textwidth]{phtmt_result_21_conv.eps}
+    \medskip
+    \small
+    \SI{26.0}{\decibel}
+    \caption{Poisson}\label{fig:llm-stereo-c}
+  \end{subfigure}
+  \begin{subfigure}[b]{.135\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{phtmt_result_11_our.eps}
+    \medskip
+    \small
+    \SI{24.0}{\decibel}
+
+    \includegraphics[width=\textwidth]{phtmt_result_21_our.eps}
+    \medskip
+    \small
+    \SI{28.5}{\decibel}
+    \caption{LLM}\label{fig:llm-stereo-d}
+  \end{subfigure}
+  \begin{subfigure}[b]{.135\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{phtmt_result_12_nmap.eps}
+    \medskip
+    \small
+
+    \includegraphics[width=\textwidth]{phtmt_result_22_nmap.eps}
+    \medskip
+    \small
+    \caption{$\nabla z$ LLM}\label{fig:llm-stereo-e}
+  \end{subfigure}
+  \begin{subfigure}[b]{.135\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{phtmt_result_12_conv.eps}
+    \medskip
+    \small
+    \SI{12.8}{\decibel}
+
+    \includegraphics[width=\textwidth]{phtmt_result_22_conv.eps}
+    \medskip
+    \small
+    \SI{26.9}{\decibel}
+    \caption{Poisson}\label{fig:llm-stereo-f}
+  \end{subfigure}
+  \begin{subfigure}[b]{.135\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{phtmt_result_12_our.eps}
+    \medskip
+    \small
+    \SI{23.9}{\decibel}
+
+    \includegraphics[width=\textwidth]{phtmt_result_22_our.eps}
+    \medskip
+    \small
+    \SI{28.5}{\decibel}
+    \caption{LLM}\label{fig:llm-stereo-g}
+  \end{subfigure}
+  \caption{Risultati della inter-conversione di luminanza e gradienti
+    }\label{fig:llm-stereo}
+  \medskip
+  \small
+  Riga superiore: del rumore viene aggiunto alle mappe di gradienti (b) ed
+  (e). \\
+  Riga inferiore: del rumore viene aggiunto all'immagine originale (a). \\
+  In (b), (c), ed (f), viene utilizzato un operatore di Scharr $3\times3$ come
+  filtro differenziale. \\
+  In (d), (e), e (g), viene utilizzato il LLM con patch $3\times3$. \\
+  I gradienti vengono rappresentati come mappa normale.
+\end{figure}
+-->
+
+[](#fig:llm-stereo) mostra i risultati della inter-conversione di
+un'immagine ed una mappa di gradienti. Si può notare che questo problema è
+equivalente allo __stereo fotometrico__ considerando la luminosità come
+profondità ed i gradienti come vettori normali. Per esaminare la tolleranza al
+rumore, nella riga superiore, è stato aggiunto un rumore Gaussiano $\sim
+\mathcal{N}(0, 0.05)$ alla mappa dei gradienti dopo la conversione e, nella
+riga inferiore, un rumore con la stessa distribuzione è stato aggiunto
+all'immagine originale. Come offset $s\vect{v}$ viene aggiunto il valore medio
+dell'immagine originale all'immagine recuperata ([](#eq:llm-space-offset)).
+Per una valutazione numerica, viene mostrato il PSNR tra l'immagine originale
+ed i risultati. Per quanto riguarda il metodo di Poisson, nella riga superiore
+è possibile notare la comparsa di artefatti a griglia: sono dovuti alla natura
+instabile dell'algoritmo attorno alla soluzione, causata dall'avvicinarsi a 0
+dei coefficienti nelle alte frequenze della trasformata di Fourier. La riga
+inferiore mostra che il metodo non riesce a gestire il rumore dell'immagine
+originale. Per quanto riguarda il metodo LLM, la riga superiore mostra la
+possibilità di ottenere risultati stabili, anche se i bordi vengono
+leggermente sfocati in confronto al metodo di Poisson. La riga inferiore
+mostra che il LLM fornisce un effetto levigato e migliora il PSNR
+dell'immagine. L'effetto di levigatura può essere considerato simile a quello
+del filtro Trilaterale che approssima le intensità con superfici piatte a
+tratti (contrapposto al LLM, che effettua questa approssimazione pixel per
+pixel).
+
+### Rimozione di Riflessi
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{rflx_noflash.eps}
+    \caption{Originale}\label{fig:llm-reflection-a}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{rflx_flash.eps}
+    \caption{Guida}\label{fig:llm-reflection-b}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{rflx_result_conv.eps}
+    \caption{Poisson (IR corta)}\label{fig:llm-reflection-c}
+  \end{subfigure}
+  
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{rflx_result_conv_scharr.eps}
+    \caption{Poisson (IR lunga)}\label{fig:llm-reflection-d}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{rflx_result_our.eps}
+    \caption{LLM}\label{fig:llm-reflection-e}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{rflx_result_our_mix.eps}
+    \caption{LLM + Poisson (corto)}\label{fig:llm-reflection-f}
+  \end{subfigure}
+  \caption{Un'applicazione del LLM alla rimozione di
+    riflessi}\label{fig:llm-reflection}
+  \medskip
+  \small
+  In (c) e (d), come filtri differenziali, vengono utilizzati rispettivamente
+  la differenza in avanti e l'operatore di Scharr $3\times3$. In (e), viene
+  utilizzato il LLM con una patch quadrata $5\times5$.
+\end{figure}
+-->
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.15\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{rflx_noflash_crop1.eps}
+
+    \includegraphics[width=\textwidth]{rflx_noflash_crop2.eps}
+    \caption{}\label{fig:llm-reflection-detail-a}
+  \end{subfigure}
+  \begin{subfigure}[b]{.15\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{rflx_flash_crop1.eps}
+
+    \includegraphics[width=\textwidth]{rflx_flash_crop2.eps}
+    \caption{}\label{fig:llm-reflection-detail-b}
+  \end{subfigure}
+  \begin{subfigure}[b]{.15\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{rflx_result_conv_crop1.eps}
+
+    \includegraphics[width=\textwidth]{rflx_result_conv_crop2.eps}
+    \caption{}\label{fig:llm-reflection-detail-c}
+  \end{subfigure}
+  \begin{subfigure}[b]{.15\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{rflx_result_conv_scharr_crop1.eps}
+
+    \includegraphics[width=\textwidth]{rflx_result_conv_scharr_crop2.eps}
+    \caption{}\label{fig:llm-reflection-detail-d}
+  \end{subfigure}
+  \begin{subfigure}[b]{.15\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{rflx_result_our_crop1.eps}
+
+    \includegraphics[width=\textwidth]{rflx_result_our_crop2.eps}
+    \caption{}\label{fig:llm-reflection-detail-e}
+  \end{subfigure}
+  \begin{subfigure}[b]{.15\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{rflx_result_our_mix_crop1.eps}
+
+    \includegraphics[width=\textwidth]{rflx_result_our_mix_crop2.eps}
+    \caption{}\label{fig:llm-reflection-detail-f}
+  \end{subfigure}
+  \caption{Viste in dettaglio di
+    -->[](#fig:llm-reflection)<!--.}\label{fig:llm-reflection-detail}
+  \medskip
+  \small
+  Da sinistra a destra: (a) Originale, (b) Guida, (c) Poisson con corta
+  risposta all'impulso, (d) Poisson con lunga risposta all'impulso, (e) LLM,
+  (f) combinazione del LLM con Poisson a breve risposta all'impulso.
+\end{figure}
+-->
+
+[](#fig:llm-reflection) mostra i risultati della rimozione di riflessi
+tramite il LLM. [](#fig:llm-reflection-detail) mostra alcuni dettagli delle
+immagini. L'obiettivo è di rimuovere il riflesso del fotografo (ed il rumore
+dovuto al non utilizzo del flash in condizioni di scarsa illuminazione)
+dall'immagine originale (a) utilizzando l'immagine guida (b). Come [vettore di
+offset $s\vect{v}$](#eq:llm-space-offset) viene utilizzato nuovamente il
+colore medio dell'immagine originale (a) nel restauro delle immagini (c-f). I
+risultati (c) e (d) sono ottenuti tramite il metodo di Poisson utilizzando la
+differenza finita in avanti con l'operatore di Scharr: si può notare che
+tendono a sorgere artefatti come rumore, decolorazioni e pattern a griglia.
+Utilizzando il LLM come descritto in [](#sec:llm-applications-reflection), si
+ottiene (e), che appare privo degli artefatti dei casi precedenti, anche se
+leggermente sfocato. Infine, il risultato (f) viene ottenuto combinando i
+metodi (c) e (e) come descritto in [](#sec:llm-eq-diff). Confrontato con
+entrambi i metodi, (f) presenta decolorazioni ridotte mantenendo una buona
+nitidezza dei bordi.
+
+### Rimozione di Ombre
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{\linewidth}
+    \centering
+    \includegraphics[width=.4\textwidth]{shadow_source.png}
+    ~
+    \includegraphics[width=.4\textwidth]{shadow_result_nonuniform.png}
+    \caption{}\label{fig:llm-shadow-source-a}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{\linewidth}
+    \centering
+    \includegraphics[width=.4\textwidth]{shadow_source_alt.png}
+    ~
+    \includegraphics[width=.4\textwidth]{shadow_result_nonuniform_alt.png}
+    \caption{}\label{fig:llm-shadow-source-b}
+  \end{subfigure}
+  \caption{Coppie di immagini utilizzate per la rimozione di
+  ombre}\label{fig:llm-shadow-source}
+  \medskip
+  \small
+  A sinistra è mostrata l'immagine originale, a destra l'immagine con l'ombra
+  restaurata, a meno del bordo.
+\end{figure}
+-->
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.4\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_result_llm_crop.png}
+    \caption{}\label{fig:llm-shadow-blur-a}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.4\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_result_llm_crop_alt.png}
+    \caption{}\label{fig:llm-shadow-blur-b}
+  \end{subfigure}
+  \caption{Sfocature della rimozione di ombre tramite
+  LLM}\label{fig:llm-shadow-blur}
+  \medskip
+  \small
+  -->
+  Dettagli del risultato della ristorazione del bordo tramite Poisson image
+  editing utilizzando il LLM con regioni $\Omega_i$ di raggio unitario quando
+  applicato a (a) [](#fig:llm-shadow-source-a) e (b)
+  [](#fig:llm-shadow-source-b).
+  <!--
+\end{figure}
+-->
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_result_lap.png}
+
+    \includegraphics[width=\textwidth]{shadow_result_lap_alt.png}
+    \caption{}\label{fig:llm-shadow-a}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_result_llm_interp.png}
+
+    \includegraphics[width=\textwidth]{shadow_result_llm_interp_alt.png}
+    \caption{}\label{fig:llm-shadow-b}
+  \end{subfigure}
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{shadow_result_mix_interp.png}
+
+    \includegraphics[width=\textwidth]{shadow_result_mix_interp_alt.png}
+    \caption{}\label{fig:llm-shadow-c}
+  \end{subfigure}
+  \caption{Risultati della rimozione di ombre}\label{fig:llm-shadow}
+  \medskip
+  \small
+  -->
+  In alto: risultati relativi alle immagini di [](#fig:llm-shadow-source-a),
+  in basso: risultati relativi alle immagini di [](#fig:llm-shadow-source-b).
+
+  Il bordo è stato restaurato applicando il Poisson image editing secondo (a)
+  secondo l'algoritmo classico[#Perez:2003aa][], (b) tramite LLM, (c)
+  combinando il LLM con l'algoritmo classico.
+  <!--
+\end{figure}
+-->
+
+[](#fig:llm-shadow) mostra i risultati della rimozione di ombre
+applicata alle immagini di [](#fig:llm-shadow-source). Come è evidente da
+[](#fig:llm-shadow-blur), la regione considerata dal LLM per il
+calcolo e l'integrazione dei gradienti è eccessiva per questo compito, anche
+ponendo il raggio delle regioni $\Omega_i$ a 1. Per questo motivo, in
+[](#fig:llm-shadow-b) e [](#fig:llm-shadow-c), la ristorazione è stata
+effettuata su versioni delle immagini interpolate bi-cubicamente di un fattore
+4---questo equivale ad adottare finestre di raggio $\frac{1}{4}$ di pixel. Si
+può notare che le differenze tra i risultati così ottenuti paiono minime.
+
+## Trasformazioni di colore tra coppie di immagini [sec:gf-results]
+
+Come applicazione è stata scelta la *composizione di immagini
+flash/no-flash*[^FlashNoFlash] tramite GF (questa applicazione è stata
+originariamente proposta in [#Petschnigg:2004aa,Eisemann:2004aa][]) in quanto
+l'immagine *flash* (guida) e l'immagine *no-flash* (input) includono molte
+corrispondenze errate causate da sotto/sovra-esposizioni in regioni statiche.
+Per valutare i risultati della classificazione tramite SVM e del blending
+effettuato con [](#eq:gf-blending), è stato addestrata la SVM su un dataset di
+30 coppie di immagini corredate da trimap, come descritto in
+[](#sec:svm-training). Alle immagini di input è stato aggiunto del rumore
+Gaussiano $\sim \mathcal{N}(0, 0.06)$, e le intensità delle immagini
+utilizzate per l'addestramento e per il test sono state normalizzate tra $[0,
+1]$.
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{tsurigane_noflash.png}
+    \caption{Input}\label{fig:svm-classification-a}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{tsurigane_flash.png}
+    \caption{Guida}\label{fig:svm-classification-b}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{tsurigane_map.png}
+    \caption{Classificazione}\label{fig:svm-classification-c}
+  \end{subfigure}
+  \caption{Risultato della fase di test della
+    SVM}\label{fig:svm-classification}
+  \medskip
+  \small
+  Utilizzando la coppia di immagini (a) e (b), la SVM fornisce in output (c).
+\end{figure}
+-->
+
+La [](#fig:svm-classification) mostra il risultato della classificazione fatta
+con la SVM: le aree dinamiche nella coppia di immagini
+[](#fig:svm-classification-a) e [](#fig:svm-classification-b) vengono
+automaticamente classificate come mostrato in [](#fig:svm-classification-c),
+la quale mostra i valori di $\alpha(y_i)$ come definito in
+[](#eq:gf-blending). Le regioni statiche appaiono quindi in nero
+($\alpha(y_i) = 0$), mentre le regioni dinamiche appaiono in bianco
+($\alpha(y_i) = 1$).
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{tsurigane_result_CBM3D.png}
+    \caption{BM3D}\label{fig:gf-comparison-a}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{tsurigane_result_JointBLF.png}
+    \caption{Joint bilateral filter}\label{fig:gf-comparison-b}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{tsurigane_result_GF.png}
+    \caption{GF classico-->[#He:2013aa][]<!--}\label{fig:gf-comparison-c}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{tsurigane_result_LCDP.png}
+    \caption{GF pesato-->[#Iwata:2013aa][]<!--}\label{fig:gf-comparison-d}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{tsurigane_result_KWS.png}
+    \caption{GF proposto}\label{fig:gf-comparison-e}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{tsurigane_result.png}
+    \caption{Blending}\label{fig:gf-comparison-f}
+  \end{subfigure}
+  \caption{Risultato della composizione di immagini
+    flash/no-flash}\label{fig:gf-comparison}
+  \medskip
+  \small
+\end{figure}
+-->
+<!-- \todo{Description of the figure? Circling of the decolourations?} -->
+
+La [](#fig:gf-comparison) mostra un confronto tra il GF pesato, il GF
+proposto, il GF ottenuto tramite blending ed alcuni metodi standard
+[#He:2013aa,Dabov:2007aa,Petschnigg:2004aa][]. Il [BM3D
+[#Dabov:2007aa][]](#fig:gf-comparison-a) viene mostrato come rappresentante
+dei metodi di denoising su un'immagine singola, anche se causa pattern
+innaturali nelle immagini risultanti. I risultati ottenuti tramite il [metodo
+originale di questa applicazione [#Petschnigg:2004aa][]](#fig:gf-comparison-b)
+ed il [GF standard [#He:2013aa][]](#fig:gf-comparison-c) sono simili e le loro
+regioni dinamiche soffrono di sfocature e decolorazioni, principalmente
+causati dal disallineamento tra i pixel. Il [GF
+pesato[#Iwata:2013aa][]](#fig:gf-comparison-d) è in grado di ridurre le
+sfocature preservando meglio i bordi delle regioni dinamiche, ma lascia
+comunque alcune decolorazioni. Il [GF proposto](#fig:gf-comparison-e) ottiene
+buoni risultati nelle regioni dinamiche ma causa la comparsa di decolorazioni
+nelle aree scure. Il [risultato finale](#fig:gf-comparison-f) ottenuto come
+blending del GF pesato e del GF proposto presenta un aspetto naturale,
+riducendo le decolorazioni causate da entrambi i metodi.
+
+La performace della classificazione effettuata dalla SVM (mostrata in
+[](#fig:svm-classification-c)) può essere considerata leggermente eccessiva in
+quanto alcune regioni statiche sono state erroneamente classificate (e.g., le
+travi del campanile), ma in queste regioni i risultati di entrambi i GF
+risultano simili e, in ogni caso, il problema è riducibile specificando queste
+situazioni nel dataset di addestramento. Questo problema è trattabile in modo
+simile simile all'image matting [#Levin:2008aa,Li:2008aa][], ossia, etichette
+definite come scarabocchi o trimap possono essere estesi automaticamente a
+regioni simili. Questa tecnica potrebbe quindi essere utilizzata per
+migliorare la precisione di classificazione.
+
+[^FlashNoFlash]: La composizione di immagini flash/no-flash consiste nel
+restauro di un'immagine di una scena notturna ottenuta senza l'utilizzo
+del flash, quindi con rumore dovuto all'alta sensibilità necessaria,
+effettuata utilizzando come immagine guida un'immagine della stessa scena,
+ottenuta però con l'ausilio del flash e, quindi, con rumore molto ridotto ma
+con colori alterati dalla luce del flash ed eventuali saturazioni.
+

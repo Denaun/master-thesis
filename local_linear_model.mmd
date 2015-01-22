@@ -1,0 +1,312 @@
+Approssimazioni locali di immagini a superfici planari [sec:llm]
+================================================================
+
+In questo capitolo, verrà prima mostrata l'equazione di base per il LLM per il
+*dominio del colore* e, successivamente, verranno descritti il LLM per il
+*dominio dello spazio* e la sua risoluzione.
+
+Innanzitutto è necessario definire le convenzioni utilizzate per gestire
+insiemi di pixel locali: chiamando $i$ l'indice del pixel analizzato,
+$\Omega_i$ corrisponde ad una patch quadrata centrata nel pixel $i$ e
+$j\in\Omega_i$ ad un pixel vicino, incluso nella patch. Il numero di pixel
+nell'intera immagine e nella patch sono chiamati rispettivamente $N$ ed $M$,
+con $M<N$.
+
+<!--
+\begin{figure}
+  \captionsetup[subfigure]{justification=raggedright}
+
+  \centering
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{llm_patch.eps}
+    \caption{Esempio di patch considerata}\label{fig:llm-intro-a}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{llm_color.eps}
+    \caption{Rappresentazione nel dominio del colore}\label{fig:llm-intro-b}
+  \end{subfigure}%
+  ~
+  \begin{subfigure}[b]{.3\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{llm_spatial.eps}
+    \caption{Rappresentazione nel dominio dello spazio}\label{fig:llm-intro-c}
+  \end{subfigure}%
+  \caption{La definizione del LLM adottata nei domini del colore e dello
+    spazio}\label{fig:llm-intro}
+  \medskip
+  \small
+  I colori dei pixel componenti una patch (a) sono rappresentabili con una
+  color-line (b), mentre le loro intensità sono rappresentabili con un piano
+  (c).
+\end{figure}
+-->
+
+## Modello Lineare Locale nel dominio del colore
+
+Il LLM convenzionale, proposto da [#Levin:2008aa;][] per l'[image
+matting](#fig:intro-matting) ed accennato
+nell'[introduzione](#sec:intro-llm), è definibile matematicamente tramite la
+seguente trasformazione lineare, chiamando $\vect{I}_j = \transp{[I^r_j,
+I^g_j, I^b_j]} \in \set{R}^3$ i colori inclusi in una patch e
+$\vect{a}_i\in\set{R}^3$ e $b_i\in\set{R}$ rispettivamente i vettori di
+trasformazione e gli offset assegnati alla patch:
+\\[\label{eq:llm-color}
+\arg\min_{p, \vect{a}, b} \sum_i
+\left(\sum_{j\in\Omega_i} w_{ij} \left\|\transp{\vect{a}}_i\vect{I}_j + b_i -
+      p_j\right\|^2_2 + R_{\|\cdot\|^2} \right) + C
+\\]
+dove $p_j\in\set{R}$ sono le intensità da ottenere, $\|\cdot\|_2$
+corrisponde alla norma $\ell_2$ e $R_{\|\cdot\|^2}$ è un termine di
+regolarizzazione---utile, ad esempio, a fornire stabilità numerica---per le
+variabili $\vect{a}_i$ e $b_i$, basato sulla norma $\ell_2$ o sulla norma di
+Frobenius[^FrobeniusNorm], $C$ denota altri vincoli di data fidelity e di
+regolarizzazione, e $w_{ij} \geq 0$ sono pesi utilizzabili per eliminare gli
+outliers.
+
+Una procedura tipica utilizzabile per ottenere la soluzione ottima $p^*_j$
+[#Levin:2008aa,Bousseau:2009aa,Shan:2010aa][] consiste nel risolvere
+[](#eq:llm-color) rispetto ad $\vect{a}_i$ e $b_i$, dopodiché sostituirli
+nuovamente in [](#eq:llm-color) e risolvere infine l'equazione risultante
+rispetto a $p_j$. Nel caso dei filtri guidati
+[#He:2010aa,Iwata:2013aa,Lu:2012aa][], viene utilizzata un'ottimizzazione
+alternata, ottenuta fissando i valori iniziali di $p_j$ tramite un'immagine
+guida e procedendo alla risoluzione prima rispetto a $\vect{a}_i$ e $b_i$ e
+successivamente rispetto a $p_j$.
+
+## Modello Lineare Locale nel dominio dello spazio
+
+Il LLM proposto è ispirato dallo stereo fotometrico e dal suo metodo di
+ristorazione di una mappa di profondità a partire da una mappa di vettori
+normali [#Nehab:2005aa,Agrawal:2006aa][]. Chiamando un set di coordinate
+$(x_j, y_j)$ ed il valore[^SingleChannel] del pixel corrispondente $z_j =
+I(x_j, y_j) \in \set{R}$, vengono definiti un vettore di coordinate
+$\vect{x}_j = \transp{[x_j, y_j, z_j]}$ ed un vettore unitario $\vect{n}_i =
+\transp{[a_i, b_i, c_i]} \suchthat \|\vect{n}_i\|_2 = 1$. L'equazione di un
+piano nello spazio è definibile quindi come:
+\\[\label{eq:plane}
+a_i x_j + b_i y_j + c_i z_j + d_i =
+\transp{\vect{n}}_i \vect{x}_j + d_i = 0
+\\]
+dove $d_i$ indica la distanza del piano dall'origine degli assi. Per
+semplicità nei calcoli successivi, [](#eq:plane) viene divisa per $-c_i$ e
+vengono definite le nuove variabili $\vect{n}'_i = \transp{[a'_i, b'_i]} =
+\transp{[-\frac{a_i}{c_i}, -\frac{b_i}{c_i}]}$, $\vect{x}'_j =
+\transp{[x_j, y_j]}$ e $d'_i = -\frac{d_i}{c_i}$. Così facendo, [](#eq:plane)
+assume una forma simile all'argomento della norma di [](#eq:llm-color), ossia:
+\\[\label{eq:plane-norm}
+\transp{\vect{n}'}_i \vect{x'}_j + d'_i - z_j = 0
+\\]
+
+L'equazione finale viene ottenuta considerando un'ottimizzazione su tutta
+l'immagine, definendo la funzione energia come:
+\\[\label{eq:llm-space-energy}
+E(z, d') = \sum_i \sum_{j\in\Omega_i} w_{ij} \left\|\transp{\vect{n}'}_i
+\vect{x}'_j + d'_i - z_j\right\|^2_2 + C
+\\]
+In questa trattazione, il termine di regolarizzazione di [](#eq:llm-color)
+non viene utilizzato ($R_{\|\cdot\|^2} = 0$), mentre dei possibili utilizzi
+dei vincoli $C$ verranno trattati in [](#sec:llm-eq-diff) e
+[](#sec:llm-applications-shadow-border).
+
+### Soluzione rispetto a $d'$
+
+L'ottimo locale $d'^*$ viene ottenuto ponendo la derivata prima di
+[](#eq:llm-space-energy) uguale a zero, come in [#He:2010aa,Iwata:2013aa][].
+Ciò risulta in:
+\\[\label{eq:llm-space-solution-d}
+d'^*_i = \mean{z}_i - \transp{\vect{n}'}_i \mean{\vect{x}}'_i
+\\]
+dove $\mean{z}_i = \frac{\sum_j w_{ij} z_j}{\sum_j w_{ij}}$ e
+$\mean{\vect{x}}'_i = \frac{\sum_j w_{ij} \vect{x}'_j}{\sum_j w_{ij}}$
+denotano le medie pesate.
+Sostituendo [](#eq:llm-space-solution-d) in [](#eq:llm-space-energy) per
+eliminare $d'_i$, si ottiene l'equazione principale del metodo proposto:
+\\[\label{eq:llm-space}
+E(z) = \sum_i \sum_{j\in\Omega_i} w_{ij} \left\| \transp{\vect{n}'}_i
+\widetilde{\vect{x}}'_j - \widetilde{z}_j\right\|^2_2
+\\]
+dove $\widetilde{\vect{x}}'_j = \vect{x}'_j - \mean{\vect{x}}'_i$ e
+$\widetilde{z}_j = z_j - \mean{z}_i$ corrispondono alle variabili centrate
+rispetto alla loro media pesata.
+
+### Soluzione rispetto a $z$ [sec:llm-sol-z]
+
+Similarmente al caso precedente, [](#eq:llm-space) viene derivata---questa
+volta rispetto a $z_j$---ed il valore ottimo $z^*_j$ viene ottenuto ponendo la
+derivata a zero. Il differenziale è in questo caso complesso a causa delle
+operazioni di centratura effettuate, per cui viene introdotto un vettore
+$\vect{z} = \transp{[z_1, \dotsc,z_N]} \in \set{R}^N$ e l'operazione viene
+espressa tramite una matrice di centratura $\vect{V}_i \in \set{R}^{M \times
+N}$ come descritto in [](#apx:centering). Introducendo inoltre i vettori di
+coordinate $\vect{x} = \transp{[x_1, \dotsc, x_N]}$ e $\vect{y} =
+\transp{[x_1, \dotsc, x_N]} \in \set{R}^N$ ed una matrice diagonale di pesi
+$\vect{W}_i = \diag(w_{{ij}_i}, \dotsc, w_{{ij}_M}) \in \set{R}^{M \times M}$,
+[](#eq:llm-space) può essere riscritta come:
+\\[\label{eq:llm-space-matrix}
+E(\vect{z}) = \sum_i \left\|\vect{W}^\frac{1}{2}_i(a'_i \vect{V}_i \vect{x} +
+b'_i \vect{V}_i \vect{y} - \vect{V}_i)\right\|^2_2
+\\]
+
+Derivando [](#eq:llm-space-matrix) rispetto a $\vect{z}$ e chiamando
+$\vect{U}_i = \transp{\vect{V}}_i \vect{W}_i \vect{V}_i$, si ottiene infine la
+seguente equazione:
+\\[\label{eq:llm-space-system}
+\left(\sum_i \vect{U}_i\right) \vect{z} = \sum_i (a'_i \vect{U}_i
+\vect{x} + b'_i \vect{U}_i \vect{y})
+\\]
+Questa equazione si presenta sotto la forma standard $\vect{A}\vect{x} =
+\vect{b}$ e, dato che $\vect{A} = \sum_i \vect{U}_i \in \set{R}^{N \times N}$
+è una matrice simmetrica, la soluzione può essere ottenuta applicando il CG
+[#Hestenes:1952aa][]. Nell'implementazione viene utilizzato un [metodo di
+calcolo efficiente](#apx:efficient-z) per ridurre la complessità della
+computazione, necessario per ottenere tempi di elaborazione ragionevoli a
+causa dell'enorme dimensione delle matrici.
+
+Si noti che il valore ottenuto per $z^*_i$ risulta *incompleto* se non vengono
+impostate le condizioni al contorno appropriati nel termine di
+regolarizzazione [$C$](#eq:llm-space-energy). In modo simile alle equazioni di
+Poisson con condizioni al bordo di Neumann[^NeumannBoundary], il rango della
+matrice non è pieno: $\rank(\vect{A}) = N-1$. Ciò significa che esiste un
+autovettore $\vect{v}$---corrispondente all'autovalore nullo---tale per cui
+$\vect{A} \vect{v} = 0$ e la soluzione presenta quindi un'ambiguità del tipo
+$\vect{A}(\vect{z} + s\vect{v}) = \vect{b}, s \in \set{R}$. È quindi
+necessario aggiungere un offset $s\vect{v}$ alla soluzione per ottenere un
+risultato visualmente piacevole:
+\\[\label{eq:llm-space-offset}
+\widehat{\vect{z}}^* = \vect{z}^* + s\vect{v}
+\\]
+Il valore di $s\vect{v}$
+verrà specificato per ogni applicazione mostrata.
+
+### Soluzione rispetto a $\vect{n}'$ [sec:llm-sol-n]
+
+[](#eq:llm-space) può anche essere utilizzata per trovare i valori di
+$\vect{n}'$[^L'utilità pratica di questo uso del metodo verrà mostrata in
+[](#sec:gdo).]:
+\\[\label{eq:llm-space-n}
+\arg\min_{\vect{n}'}\left( E(\vect{n}'_i) = \sum_i \sum_{j\in\Omega_i} w_{ij}
+\left\| \transp{\vect{n}'_i} \widetilde{\vect{x}}'_j - \widetilde{z}_j
+\right\|^2_2 \right)
+\\]
+Il valore ottimo di $\vect{n}'^*_i$ viene ottenuto nuovamente ponendo la
+derivata prima di [](#eq:llm-space-n) a zero, risultando in:
+\\[\label{eq:llm-space-solution-n}
+\vect{n}'^*_i = \left( \sum_{j\in\Omega_i} w_{ij} \widetilde{\vect{x}}_j
+\transp{\widetilde{\vect{x}}}_j \right)^{-1} \left(\sum_{j\in\Omega_i} w_{ij}
+\widetilde{z}_j \widetilde{\vect{x}}_j \right)
+\\]
+Dato che la dimensione della matrice inversa è $2 \times 2$, viene ottenuta
+semplicemente ed in modo analitico utilizzando la formula standard dei
+cofattori. In aggiunta, quando i pesi sono uniformi ($w_{ij} = 1$),
+[](#eq:llm-space-solution-n) viene già utilizzata in [#He:2010aa][] e può
+essere risolta efficientemente usando l'*immagine integrale* [#Crow:1984aa][].
+Inoltre, la matrice di covarianza $\sum_j \widetilde{\vect{x}}_j
+\transp{\widetilde{\vect{x}}}_j$ diviene diagonale e, se la dimensione delle
+patch è fissa, la stessa matrice di covarianza viene ottenuta per ogni patch,
+indipendentemente dalle loro coordinate $x_i$ ed $y_i$.
+
+### Combinazione con Equazioni Differenziali convenzionali [sec:llm-eq-diff]
+
+Confrontato con la soluzione convenzionale dell'equazione di Poisson
+[](#eq:gdo-poisson) che gestisce una derivata in un'area ristretta, il LLM
+gestisce una patch locale ma ampia. Ciò permette di avere una tolleranza
+al rumore rapidamente crescente col crescere della dimensione della patch, a
+discapito però della preservazione dei bordi (esempi di questo problema sono
+visibili in [](#sec:llm-results)). Anche con una patch di dimensione
+$3\times3$, la capacità di ricostruzione dei bordi risulta leggermente
+inferiore rispetto a quella dei filtri convenzionali come la differenza in
+avanti di due pixel. Un modo di ovviare a questo problema può essere la
+combinazione delle funzioni energia del [metodo proposto](#eq:llm-space) e del
+[metodo convenzionale](#eq:gdo-poisson) per compensare le mancanze di ognuno
+dei due:
+\\[\label{eq:llm-combination}
+\arg\min_z \alpha \sum_i \sum_{j\in\Omega_i} w_{ij} \left\|\transp{\vect{n}'}_i
+\widetilde{\vect{x}}'_j - \widetilde{z}_j \right\|^2_2 + (1-\alpha) \sum_i
+\left\|\nabla z_i - \dot{\vect{n}}'_i \right\|^2_2
+\\]
+dove $\alpha \in [0, 1]$ è un parametro di *blending*, e $\dot{\vect{n}}'_i$
+indica i gradienti calcolati tramite la differenza finita in avanti. Visto che
+entrambe sono equazioni quadratiche, la loro combinazione risulta semplice.
+
+## Relazione con i Gradient Domain Operators [sec:gdo]
+
+Per chiarire la relazione tra un vettore normale utilizzato nel LLM ed i
+gradienti di intensità usati nei GDO, viene qui presa come esempio la
+ricostruzione della mappa di profondità da una mappa normale nell'ambito dello
+stereo fotometrico [#Nehab:2005aa,Agrawal:2006aa][] [^GDOApplication].
+
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{.35\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{grad_normal_1.eps}
+    \caption{}\label{fig:llm-gdo-a}
+  \end{subfigure}
+  \begin{subfigure}[b]{.35\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{grad_normal_2.eps}
+    \caption{}\label{fig:llm-gdo-b}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{.35\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{grad_normal_3.eps}
+    \caption{}\label{fig:llm-gdo-c}
+  \end{subfigure}
+  \begin{subfigure}[b]{.35\linewidth}
+    \centering
+    \includegraphics[width=\textwidth]{grad_normal_4.eps}
+    \caption{}\label{fig:llm-gdo-d}
+  \end{subfigure}
+  \caption{Relazione tra un vettore normale ed il gradiente di profondità sul
+    piano $x$-$z$}\label{fig:llm-gdo} \medskip
+  \small
+  Quando il vettore normale viene decomposto lungo le direzioni $x$ e $z$
+  (a) utilizzando i vettori di base $[a_i, 0, 0]$ e $[0, 0, c_i]$, l'equazione
+  di una retta passante per il vettore normale è data da $z=\frac{c_i}{a_i} x$
+  (b); per quanto riguarda il gradiente del piano tangente (c), la variazione
+  di profondità associata alla differenza in avanti di un pixel è data da
+  $\partial_x z_i$ ed un'equazione perpendicolare al piano (d) è data da
+  $z=-\frac{1}{\partial_x z_i}$. Ciò significa che esiste una relazione di
+  identità $\frac{c_i}{a_i} = - \frac{1}{\partial_x z_i}$.
+\end{figure}
+-->
+
+In questa applicazione, i gradienti $\nabla z_i = \transp{[\partial_x z_i,
+\partial_y z_i]}$---dove $\partial_x$ e $\partial_y$ sono definiti come filtri
+differenziali---vengono trovati osservando l'angolo di un vettore normale ad
+ogni pixel $\vect{n}_i = \transp{[a_i, b_i, c_i]}$. [](#fig:llm-gdo) mostra la
+relazione tra la normale $\vect{n}_i$ ed i gradienti $\nabla z_i$ sul piano
+$x-z$ e si può notare che questa è del tipo $\frac{c_i}{a_i} =
+-\frac{1}{\partial_x z_i}$. La stessa relazione vale per il piano $y-z$, ossia
+$\frac{c_i}{b_i} = -\frac{1}{\partial_y z_i}$. Queste relazioni possono essere
+quindi riassunte come:
+\\[\label{eq:gdo-relationship}
+\transp{[\partial_x z_i, \partial_y z_i]} = \transp{\left[-\frac{a_i}{c_i},
+-\frac{b_i}{c_i}\right]} \implies \nabla z_i = \vect{n}'_i
+\\]
+Ciò significa che il LLM applicato al dominio dello spazio è sostituibile
+direttamente sia nelle fasi di [calcolo dei gradienti di
+un'immagine](#sec:llm-sol-n), sia nelle fasi di
+[ricostruzione di un'immagine a partire dai suoi gradienti](#sec:llm-sol-z).
+
+[^FrobeniusNorm]: La norma di Frobenius corrisponde alla norma matriciale
+$L_{2,2}$, ossia
+$$\|\vect{A}\|_F = \sqrt{\sum^m_{i=1}\sum^n_{j=1}|a_{ij}|^2}$$.
+
+[^SingleChannel]: L'ottimizzazione in questo caso viene effettuata per ogni
+canale separatamente.
+
+[^NeumannBoundary]: Anch'esse rappresentabili come
+$\vect{A}\vect{z}=\vect{b}$, utilizzando come matrice $\vect{A}$ una matrice
+di filtraggio Laplaciana.
+
+[^GDOApplication]: Questo concetto verrà ripreso in [](#sec:llm-applications),
+dove verranno mostrate le applicazioni del metodo in un algoritmo di recupero
+della profondità per lo stereo fotometrico, oltre che nella rimozione di
+riflessi e nella rimozione di ombre.
+

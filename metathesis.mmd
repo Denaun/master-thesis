@@ -1,0 +1,57 @@
+Stesura della Tesi
+==================
+
+Questo documento è stato scritto interamente[^MMDFigures] in MMD
+[#Penney:2009aa][] e, successivamente, tradotto in <!-- \LaTeX -->.
+
+Markdown, di cui MMD è un'estensione, è uno strumento ideato da
+[#Gruber:2004aa;][] ed originariamente pensato per permettere a scrittori web
+di lavorare utilizzando un formato testuale semplice da leggere e semplice da
+scrivere, convertibile in XHTML strutturalmente valido. Visto il suo successo,
+[#Penney:2009aa;][] ha deciso di costruire un'estensione del linguaggio che
+permettesse di esportare i documenti non solo in HTML, bensì anche in <!--
+\LaTeX{} --> (compilabile quindi come PDF), ODF---e, di conseguenza, RTF,
+Microsoft Word, e virtualmente qualsiasi altro formato di word-processing---,
+e fornisse una quantità di features più estesa, come tabelle, note a piè
+pagina, o citazioni, oltre alla possibilità di includere __metadata__.
+
+Per poter scrivere un'intera tesi in questo linguaggio è stato necessario
+creare un template ad-hoc, distribuito come [repository
+GitHub](http://github.com/Denaun/mmd-thesis), insieme ad una breve
+documentazione ed al codice di questo documento (fornito come esempio d'uso e
+su un repository separato<!-- \todo{Repo} -->). Il template comprende il
+trattamento delle informazioni fornite come metadata per creare in modo
+semplice e standardizzato il frontespizio del documento, una serie di
+pacchetti <!-- \LaTeX{} --> ritenuti utili e pratici, e già configurati per
+fornire un ottimo output con i minori aggiustamenti possibili da parte
+dell'utente.
+
+L'intento di questo lavoro è stato quello di uniformare, in particolare
+all'interno dell'[%university], la struttura dei documenti di tesi senza per
+questo appesantire il lavoro degli studenti ma, anzi, fornendo loro un metodo
+più efficace per descrivere il lavoro svolto. Essendo il template stato
+utilizzato solamente per la scrittura di questo documento, è possibile che
+siano necessari ulteriori aggiustamenti[^GitHubIssues] ed inclusioni di
+packages---e.g, per la gestione di tabelle. Tutto sommato si ritiene che il
+lavoro abbia portato ad un template già in grado di produrre ottimi risultati.
+
+Un'estensione interessante del lavoro potrebbe essere l'ampliamento del
+linguaggio MultiMarkdown. Questo permetterebbe la gestione nativa di
+sotto-figure e di tutto ciò che viene trattato in <!-- \LaTeX{} --> all'interno
+template. Si potrebbe così sfruttare a pieno la potenza del compilatore,
+permettendo di visualizzare i documenti di tesi anche in formato HTML,
+secondo necessità.
+
+[^MMDFigures]: Gli strumenti forniti da MMD sono pensati per essere molto
+semplici, per cui non permette una gestione fine di figure ed altri oggetti
+flottanti. In particolare per la combinazione di sottofigure, è stato
+necessario scrivere il codice <!-- \LaTeX{} --> relativo, cosa fattibile
+comunque comodamente all'interno del documento MMD, inserendo il codice
+all'interno di commenti.
+
+[^GitHubIssues]: La proposta di modifiche al template è facilmente gestibile
+attraverso il sistema di __gestione di *issues*__ fornito da GitHub, secondo
+cui qualsiasi utente è libero di segnalare problemi, proporre modifiche e/o
+soluzioni ed anche derivare una propria versione del template partendo
+dall'originale (*fork*).
+
