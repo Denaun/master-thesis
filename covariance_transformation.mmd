@@ -104,8 +104,8 @@ $\Cov(\{\widetilde{\vect{I}'}_j\}) = \eye$
 
 Ricostruzione
 :   Il calcolo di $\{\widehat{\vect{p}}'_j\} = \vect{R}_i
-\{\widetilde{\vect{I}}'_j\}$ ricostruisce i dati, in modo tale da rendere loro
-covarianza uguale a quella dell'immagine in input:
+\{\widetilde{\vect{I}}'_j\}$ ricostruisce i dati, in modo tale da rendere la
+loro covarianza uguale a quella dell'immagine in input:
 $\Cov(\{\hat{\vect{p}}'_j\}) = \Cov(\{\vect{p}'_j\})$.
 
 La soluzione di $\vect{A}_i$ risulta essere quindi:
@@ -125,7 +125,7 @@ soddisfatto:
 \\]
 Questo, però, non rende unica la soluzione, in quanto l'ordine delle
 componenti di $\vect{Q}_i$ e $\vect{R}_i$ è arbitrario. Alcune di queste
-soluzioni potrebbero causare decolorazioni ed un metodo per gestire questo
+soluzioni potrebbero causare decolorazioni; un metodo per gestire questo
 problema è descritto in [](#sec:discolorations).
 
 ### Trasformazione globale del colore
@@ -185,8 +185,8 @@ $\vect{V}_i$](#eq:gf-solution-a). Queste presentano però due ambiguità:
 
 Per gestire questi problemi, vengono fatte due assunzioni:
 
- 1. Una coppia di patch presentano distribuzioni di colore di forma simile tra
-    di loro. Questo implica che l'ordine degli assi principali sia lo stesso.
+ 1. Una coppia di patch present distribuzioni di colore di forma simile tra di
+    loro. Questo implica che l'ordine degli assi principali sia lo stesso.
     Inoltre, nel caso in cui la distribuzione divenga sferica in una regione
     di colore uniforme e che, quindi, l'ordine degli assi non sia decidibile,
     questo non risulta un problema visto che la varianza lungo ogni asse è
@@ -201,12 +201,11 @@ Per gestire questi problemi, vengono fatte due assunzioni:
 La matrice $\vect{R}_i$ in $\vect{A}_i = \vect{R}_i \vect{Q}^{-1}_i$, i.e.,
 $\vect{R}_i = \vect{V}_i \vect{\Xi}^{\frac{1}{2}}_i$ viene ottenuta da dati
 rumorosi, e l'influenza del rumore appare principalmente in $\vect{\Xi}_i$.
-Ciò significa che, quando una distribuzione di colore viene alterata dalla
-influenza del rumore, le sue varianze $\{\xi^2_1, \xi^2_2, \xi^2_3\}$
+Ciò significa che, quando una distribuzione di colore viene alterata
+dall'influenza del rumore, le sue varianze $\{\xi^2_1, \xi^2_2, \xi^2_3\}$
 aumentano. Questo porta ad un'espansione eccessiva della distribuzione
-trasformata e, quindi, un'enfasi eccessiva del colore.
+trasformata e, quindi, ad un'enfasi eccessiva del colore.
 
-<!-- \todo{Expand} -->
 Dalla nostra esperienza[#Shirai:2012aa,Ono:2013aa][], le deviazioni
 standard lungo il secondo e, in particolare, il terzo asse ($\{\xi_2,
 \xi_3\}$) sono collegate alle decolorazioni: anche nel caso in cui i dati non
@@ -251,7 +250,7 @@ $\vect{\Xi}_i$ viene fatta come segue:
 
     \includegraphics[width=\textwidth]{static_guidance.png}
     \caption{Guida}\label{fig:gf-results-b}
-  \end{subfigure}%
+  \end{subfigure}
   ~
   \begin{subfigure}[b]{.22\linewidth}
     \centering
@@ -274,7 +273,7 @@ $\vect{\Xi}_i$ viene fatta come segue:
   \small
   Alto: risultati su una regione dinamica. Basso: risultati su una regione
   statica. \\
-  Da sinistra a destra: immagini in input, rumorosa\footnotemark{} ma con
+  Da sinistra a destra: immagini in input, rumorose\footnotemark{} ma con
   contrasto ideale (a); immagini guida, con messa a fuoco ideale ma contrasto
   alterato (b); risultato del GF -->[#Iwata:2013aa][]<!-- (c); risultato del
   GF proposto (d).
@@ -295,7 +294,7 @@ ottenere un risultato più naturale.
 
 Analizzando le matrici di trasformazione ottenute con i GF esistenti, si nota
 che la presenza di sfocature è associabile alla norma delle matrici
-$\|\vect{A}_i\|$, i.e giocano un ruolo da fattore di riscalatura del contrasto
+$\|\vect{A}_i\|$, i.e., giocano un ruolo da fattore di riscalatura del contrasto
 di ogni patch e, decrescendo, causano il valore di $\vect{A}_i\vect{I}_i$ di
 avvicinarsi a zero e, quindi del valore finale di $\vect{A}_i\vect{I}_j +
 \vect{b}_i$ di avvicinarsi alla media $\vect{b}_i$ dei pixel della patch.
@@ -327,7 +326,7 @@ i risultati della seconda fase sono descritti in [](#sec:gf-results).
 
     \includegraphics[width=\textwidth]{training8_flash.png}
     \caption{Guida}\label{fig:svm-train-b}
-  \end{subfigure}%
+  \end{subfigure}
   ~
   \begin{subfigure}[b]{.3\linewidth}
     \centering

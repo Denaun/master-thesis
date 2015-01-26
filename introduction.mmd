@@ -15,7 +15,7 @@ stessa tramite delle superfici planari definite in ogni pixel.  Le
 inclinazioni di queste superfici rappresentano una sorta di gradiente
 dell'immagine, col vantaggio aggiuntivo di una robustezza maggiore al rumore.
 Questo nuovo metodo può essere adottato in sostituzione a qualsiasi
-applicazione impieghi l'equazione di Poisson ed alcune sue applicazioni
+applicazione impieghi l'equazione di Poisson. Alcune sue applicazioni
 saranno mostrate in [](#sec:llm-applications).
 
 La seconda tecnica analizzata, introdotta in [](#sec:intro-cov) e descritta in
@@ -135,15 +135,15 @@ griglia nelle immagini risultanti, il LLM riesce a rimuovere il rumore ed a
 fornire risultati più naturali. Lo svantaggio consiste, però, nella perdita di
 definizione degli spigoli rispetto alla differenza finita. Per questo motivo è
 possibile adottare una combinazione tra i due metodi in grado di compensare
-gli svantaggi tra i due e fornire risultati migliori.
+gli svantaggi di entrambi e fornire risultati migliori.
 
-I contributi portati da questo studio consistono in:
+I contributi apportati da questo studio consistono in:
 
 Modello Lineare Locale per il Dominio dello Spazio:
 :   applicabile ai GDO che includono l'equazione di Poisson: $\arg\min_I\sum_i
     \left\|\nabla I_i - \vect{J}_i \right\|^2_2$ (con $I_i\in\set{R}$ e
     $\vect{J}_i\in\set{R}^2$), o la sua versione estesa con il LLM. Questo
-    metodo fornisce risultati migliori dei filtri differenziali risposta
+    metodo fornisce risultati migliori dei filtri differenziali con risposta
     all'impulso lunga.
     
 
@@ -151,7 +151,7 @@ Alta gestibilità:
 :   questo LLM può essere usato in congiunzione con la convenzionale equazione
     di Poisson come vincolo e stabilizzatore, con lo scopo di migliorare la
     qualità dell'immagine. Verranno mostrati un metodo di calcolo efficiente
-    in grado di gestire grandi kernel ed un metodo[#He:2010aa][] che fa uso
+    in grado di gestire grandi kernel ed una tecnica[#He:2010aa][] che fa uso
     del metodo del Gradiente Coniugato[#Hestenes:1952aa,Barrett:1994aa][] e
     dell'*immagine integrale* [#Crow:1984aa][].
 
@@ -172,21 +172,20 @@ guida---e.g, per restaurare un'immagine di una scena notturna ottenuta senza
 l'utilizzo del flash, quindi con rumore dovuto all'alta sensibilità ISO
 necessaria, potrebbe venire utilizzata come immagine guida un'immagine della
 stessa scena, ottenuta però con l'ausilio del flash e, quindi, con rumore
-molto ridotto al costo della comparsa di di alterazioni dei colori dovute
-dalla luce del flash ed eventuali saturazioni. Nonostante questi metodi siano
-stati applicati in una varietà di situazioni, come correzione del contrasto
+molto ridotto al costo della comparsa di alterazioni dei colori dovute alla
+luce del flash ed eventuali saturazioni. Nonostante questi metodi siano stati
+applicati in una varietà di situazioni, come correzione del contrasto
 [#Yuan:2012aa][] e stereo matching [#Rhemann:2011aa][], le applicazioni
 obiettivo del metodo studiato sono la rimozione del rumore ed il tone
 mapping[#Shirai:2011aa,Iwata:2013aa,Yuan:2012aa][].
 
-I filtri guidati nascono come alternativa ai classici filtri LTI: permettono
-infatti tempi di elaborazione genericamente inferiori (risultano richiedere
+I filtri guidati nascono come alternativa ai classici filtri LTI, permettendo
+tempi di elaborazione genericamente inferiori (risultano infatti richiedere
 tempi lineari, indipendentemente dalla dimensione del kernel). Possono essere
 utilizzati come operatori liscianti in grado di preservare i contorni meglio
-di filtri come il filtro bilaterale[Tomasi:1998aa][] e, soprattutto,
-permettono nuove applicazioni del filtraggio grazie alla possibilità di
-trasferire strutture dell'immagine guida sull'immagine in
-uscita [](#fig:intro-gf-he).
+di filtri, e.g., quello bilaterale[Tomasi:1998aa][] e, soprattutto, permettono
+nuove applicazioni del filtraggio grazie alla possibilità di trasferire
+strutture dell'immagine guida sull'immagine in uscita [](#fig:intro-gf-he).
 
 <!--
 \begin{figure}
@@ -250,7 +249,7 @@ di queste patch: [$\vect{A}_i\vect{I}_j \to
     \includegraphics[width=\textwidth]{root_flash.png}
     \caption{Guida}\label{fig:intro-cov-discolourations-b}
   \end{subfigure}
-
+  ~
   \begin{subfigure}[b]{.49\linewidth}
     \centering
     \includegraphics[width=\textwidth]{root_result_LCDP.png}
@@ -273,19 +272,19 @@ di queste patch: [$\vect{A}_i\vect{I}_j \to
 \end{figure}
 -->
 
-Il metodo qui proposto è costruito apposta per gestire le regioni dinamiche e
-per ottenere questo lavora sul rendere conformi tra di loro le due *matrici di
-covarianza* della coppia di patch. Questo approccio ottiene l'effetto
+Il metodo qui proposto è costruito apposta per gestire le regioni dinamiche e,
+per ottenere questo, lavora sul rendere conformi tra di loro le due *matrici
+di covarianza* della coppia di patch. Questo approccio ottiene l'effetto
 desiderato---di trasformare una distribuzione di colore in un'altra---grazie
 al fatto che la forma assunta da una distribuzione di colore è numericamente
 rappresentabile tramite la sua matrice di covarianza. Inoltre, visto che le
 due matrici sono calcolabili separatamente, è possibile rilassare la
 corrispondenza pixel-per-pixel ed ottenere così buoni risultati sulle regioni
-dinamiche. Tuttavia, come svantaggio per il non utilizzare queste
-corrispondenze, possono sorgere decolorazioni (intese come *asperità* di
-colore) durante la trasformazione, rendendo la qualità delle *regioni
-statiche* inferiore a quella dei GF classici e, in particolare, del GF
-proposto da [#Iwata:2013aa;][].
+dinamiche. Tuttavia, con il mancato utilizzo di queste corrispondenze, possono
+sorgere decolorazioni (intese come *asperità* di colore) durante la
+trasformazione, rendendo la qualità delle *regioni statiche* inferiore a
+quella dei GF classici e, in particolare, del GF proposto da
+[#Iwata:2013aa;][].
 
 Sia il metodo proposto che il metodo convenzionale presentano, quindi,
 vantaggi e svantaggi su regioni pressoché complementari. È quindi possibile

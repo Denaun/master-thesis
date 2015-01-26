@@ -19,12 +19,12 @@ Per poter scrivere un'intera tesi in questo linguaggio è stato necessario
 creare un template ad-hoc, distribuito come [repository
 GitHub](http://github.com/Denaun/mmd-thesis), insieme ad una breve
 documentazione ed al codice di questo documento (fornito come esempio d'uso e
-su un repository separato<!-- \todo{Repo} -->). Il template comprende il
-trattamento delle informazioni fornite come metadata per creare in modo
-semplice e standardizzato il frontespizio del documento, una serie di
-pacchetti <!-- \LaTeX{} --> ritenuti utili e pratici, e già configurati per
-fornire un ottimo output con i minori aggiustamenti possibili da parte
-dell'utente.
+su un [repository separato](http://github.com/Denaun/master-thesis)). Il
+template comprende il trattamento delle informazioni fornite come metadata per
+creare in modo semplice e standardizzato il frontespizio del documento, una
+serie di pacchetti <!-- \LaTeX{} --> ritenuti utili e pratici, e già
+configurati per fornire un ottimo output con i minori aggiustamenti possibili
+da parte dell'utente.
 
 L'intento di questo lavoro è stato quello di uniformare, in particolare
 all'interno dell'[%university], la struttura dei documenti di tesi senza per
@@ -34,13 +34,51 @@ utilizzato solamente per la scrittura di questo documento, è possibile che
 siano necessari ulteriori aggiustamenti[^GitHubIssues] ed inclusioni di
 packages---e.g, per la gestione di tabelle. Tutto sommato si ritiene che il
 lavoro abbia portato ad un template già in grado di produrre ottimi risultati.
+La semplicità della scrittura di documenti di tesi tramite la
+combinazione di MMD ed il template costruito risulta evidente osservando il
+[frontespizio](#lst:header): fornendo solamente le informazioni
+*fondamentali*, si ottiene un frontespizio correttamente formattato.
+
+<!--
+% Extremely ad-hoc language. Do not use elsewhere.
+\lstdefinelanguage{tempListing1}{
+  keywords={:},
+  morecomment=[l]{\ \ },
+}
+
+\begin{lstlisting}[language=tempListing1, float, label={lst:header},
+                   caption={Codice per il file \em{header.mmd}}]
+LaTeX Input:                  template/mmd-thesis-header
+LaTeX Mode:                   memoir
+Base Header Level:            2
+ToC Depth:                    2
+Title:                        Tecniche di miglioramento di immagini basate sulla distribuzione locale del colore
+Formatted Title:              Tecniche di miglioramento di immagini
+                              basate sulla distribuzione locale del colore
+Author:                       Maurizio Zucchelli
+Registration Number:          91665
+Supervisor:                   Prof. Nicola Adami
+Assistant Supervisor:         Prof. Keiichiro Shirai
+Second Assistant Supervisor:  Prof. Sergio Benini
+University:                   Università degli Studi di Brescia
+Faculty:                      Dipartimento di Ingegneria dell'Informazione
+Course:                       Corso di Laurea Magistrale in Ingegneria Informatica
+Academic Year:                2013-2014
+BibTeX:                       papers/bibliography.bib
+Languages:                    italian
+LaTeX Input:                  template/mmd-natbib-plain
+LaTeX Input:                  template/mmd-thesis-begin-doc
+LaTeX Input:                  mmd-equation-mode
+LaTeX Footer:                 template/mmd-thesis-footer
+\end{lstlisting}
+-->
 
 Un'estensione interessante del lavoro potrebbe essere l'ampliamento del
 linguaggio MultiMarkdown. Questo permetterebbe la gestione nativa di
-sotto-figure e di tutto ciò che viene trattato in <!-- \LaTeX{} --> all'interno
-template. Si potrebbe così sfruttare a pieno la potenza del compilatore,
-permettendo di visualizzare i documenti di tesi anche in formato HTML,
-secondo necessità.
+sotto-figure e di tutto ciò che viene trattato in <!-- \LaTeX{} -->
+all'interno del template. Si potrebbe così sfruttare a pieno la potenza del
+compilatore, permettendo di visualizzare i documenti di tesi anche in formato
+HTML, secondo necessità.
 
 [^MMDFigures]: Gli strumenti forniti da MMD sono pensati per essere molto
 semplici, per cui non permette una gestione fine di figure ed altri oggetti

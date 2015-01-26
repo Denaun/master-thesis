@@ -265,25 +265,27 @@ metodi (c) e (e) come descritto in [](#sec:llm-eq-diff). Confrontato con
 entrambi i metodi, (f) presenta decolorazioni ridotte mantenendo una buona
 nitidezza dei bordi.
 
-### Rimozione di Ombre
+### Rimozione di Ombre [sec:llm-shadow-results]
 
 <!--
 \begin{figure}
   \centering
   \begin{subfigure}[b]{\linewidth}
     \centering
-    \includegraphics[width=.4\textwidth]{shadow_source.png}
+    \includegraphics[width=.46\textwidth]{shadow_source.png}
     ~
-    \includegraphics[width=.4\textwidth]{shadow_result_nonuniform.png}
-    \caption{}\label{fig:llm-shadow-source-a}
+    \includegraphics[width=.46\textwidth]{shadow_result_nonuniform.png}
+    \caption{Ombra proiettata sulla Radcliffe Camera (Oxford
+    University)}\label{fig:llm-shadow-source-a}
   \end{subfigure}
 
   \begin{subfigure}[b]{\linewidth}
     \centering
-    \includegraphics[width=.4\textwidth]{shadow_source_alt.png}
+    \includegraphics[width=.46\textwidth]{shadow_source_alt.png}
     ~
-    \includegraphics[width=.4\textwidth]{shadow_result_nonuniform_alt.png}
-    \caption{}\label{fig:llm-shadow-source-b}
+    \includegraphics[width=.46\textwidth]{shadow_result_nonuniform_alt.png}
+    \caption{Ombra di un uomo proiettata su un
+    prato}\label{fig:llm-shadow-source-b}
   \end{subfigure}
   \caption{Coppie di immagini utilizzate per la rimozione di
   ombre}\label{fig:llm-shadow-source}
@@ -297,15 +299,15 @@ nitidezza dei bordi.
 <!--
 \begin{figure}
   \centering
-  \begin{subfigure}[b]{.4\linewidth}
+  \begin{subfigure}[b]{.46\linewidth}
     \centering
     \includegraphics[width=\textwidth]{shadow_result_llm_crop.png}
     \caption{}\label{fig:llm-shadow-blur-a}
   \end{subfigure}
   ~
-  \begin{subfigure}[b]{.4\linewidth}
+  \begin{subfigure}[b]{.46\linewidth}
     \centering
-    \includegraphics[width=\textwidth]{shadow_result_llm_crop_alt.png}
+    \includegraphics[width=\textwidth]{shadow_result_llm_alt_crop.png}
     \caption{}\label{fig:llm-shadow-blur-b}
   \end{subfigure}
   \caption{Sfocature della rimozione di ombre tramite
@@ -320,6 +322,20 @@ nitidezza dei bordi.
   <!--
 \end{figure}
 -->
+
+[](#fig:llm-shadow) mostra i risultati della rimozione di ombre
+applicata alle immagini di [](#fig:llm-shadow-source). Come è evidente da
+[](#fig:llm-shadow-blur), la regione considerata dal LLM per il
+calcolo e l'integrazione dei gradienti è eccessiva per questo compito, anche
+ponendo il raggio delle regioni $\Omega_i$ a 1. Per questo motivo, in
+[](#fig:llm-shadow-b) e [](#fig:llm-shadow-c), la ristorazione è stata
+effettuata su versioni delle immagini interpolate bi-cubicamente di un fattore
+4---questo equivale ad adottare finestre di raggio $\frac{1}{4}$ di pixel.
+
+[](#fig:llm-shadow-detail) mostra un dettaglio dei risultati di
+[](#fig:llm-shadow). Si può notare in questa figura che le differenze tra i
+risultati ottenuti sono visivamente minime ed in buona parte dovute al
+processo di interpolazione e decimazione.
 
 <!--
 \begin{figure}
@@ -339,6 +355,7 @@ nitidezza dei bordi.
     \includegraphics[width=\textwidth]{shadow_result_llm_interp_alt.png}
     \caption{}\label{fig:llm-shadow-b}
   \end{subfigure}
+  ~
   \begin{subfigure}[b]{.3\linewidth}
     \centering
     \includegraphics[width=\textwidth]{shadow_result_mix_interp.png}
@@ -360,15 +377,45 @@ nitidezza dei bordi.
 \end{figure}
 -->
 
-[](#fig:llm-shadow) mostra i risultati della rimozione di ombre
-applicata alle immagini di [](#fig:llm-shadow-source). Come è evidente da
-[](#fig:llm-shadow-blur), la regione considerata dal LLM per il
-calcolo e l'integrazione dei gradienti è eccessiva per questo compito, anche
-ponendo il raggio delle regioni $\Omega_i$ a 1. Per questo motivo, in
-[](#fig:llm-shadow-b) e [](#fig:llm-shadow-c), la ristorazione è stata
-effettuata su versioni delle immagini interpolate bi-cubicamente di un fattore
-4---questo equivale ad adottare finestre di raggio $\frac{1}{4}$ di pixel. Si
-può notare che le differenze tra i risultati così ottenuti paiono minime.
+<!--
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{\linewidth}
+    \centering
+    \includegraphics[width=.46\textwidth]{shadow_result_lap_crop.png}
+    ~
+    \includegraphics[width=.46\textwidth]{shadow_result_lap_alt_crop.png}
+    \caption{Poisson classico}\label{fig:llm-shadow-detail-a}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{\linewidth}
+    \centering
+    \includegraphics[width=.46\textwidth]{shadow_result_llm_interp_crop.png}
+    ~
+    \includegraphics[width=.46\textwidth]{shadow_result_llm_interp_alt_crop.png}
+    \caption{LLM}\label{fig:llm-shadow-detail-b}
+  \end{subfigure}
+
+  \begin{subfigure}[b]{\linewidth}
+    \centering
+    \includegraphics[width=.46\textwidth]{shadow_result_mix_interp_crop.png}
+    ~
+    \includegraphics[width=.46\textwidth]{shadow_result_mix_interp_alt_crop.png}
+    \caption{Combinazione tra Poisson classico e
+    LLM}\label{fig:llm-shadow-detail-c}
+  \end{subfigure}
+
+  \caption{Dettagli dei risultati di
+  -->[](#fig:llm-shadow)<!--}\label{fig:llm-shadow-detail}
+  \medskip
+  \small
+  -->
+  A sinistra: dettaglio dei risultati relativi alle immagini di
+  [](#fig:llm-shadow-source-a), a destra: dettaglio dei risultati relativi
+  alle immagini di [](#fig:llm-shadow-source-b).
+  <!--
+\end{figure}
+-->
 
 ## Trasformazioni di colore tra coppie di immagini [sec:gf-results]
 
@@ -378,7 +425,7 @@ originariamente proposta in [#Petschnigg:2004aa,Eisemann:2004aa][]) in quanto
 l'immagine *flash* (guida) e l'immagine *no-flash* (input) includono molte
 corrispondenze errate causate da sotto/sovra-esposizioni in regioni statiche.
 Per valutare i risultati della classificazione tramite SVM e del blending
-effettuato con [](#eq:gf-blending), è stato addestrata la SVM su un dataset di
+effettuato con [](#eq:gf-blending), è stata addestrata la SVM su un dataset di
 30 coppie di immagini corredate da trimap, come descritto in
 [](#sec:svm-training). Alle immagini di input è stato aggiunto del rumore
 Gaussiano $\sim \mathcal{N}(0, 0.06)$, e le intensità delle immagini
@@ -425,48 +472,47 @@ la quale mostra i valori di $\alpha(y_i)$ come definito in
 <!--
 \begin{figure}
   \centering
-  \begin{subfigure}[b]{.3\linewidth}
+  \begin{subfigure}[b]{.46\linewidth}
     \centering
     \includegraphics[width=\textwidth]{tsurigane_result_CBM3D.png}
     \caption{BM3D}\label{fig:gf-comparison-a}
   \end{subfigure}
   ~
-  \begin{subfigure}[b]{.3\linewidth}
+  \begin{subfigure}[b]{.46\linewidth}
     \centering
     \includegraphics[width=\textwidth]{tsurigane_result_JointBLF.png}
     \caption{Joint bilateral filter}\label{fig:gf-comparison-b}
   \end{subfigure}%
-  ~
-  \begin{subfigure}[b]{.3\linewidth}
+  
+  \begin{subfigure}[b]{.46\linewidth}
     \centering
     \includegraphics[width=\textwidth]{tsurigane_result_GF.png}
     \caption{GF classico-->[#He:2013aa][]<!--}\label{fig:gf-comparison-c}
   \end{subfigure}
-
-  \begin{subfigure}[b]{.3\linewidth}
+  ~
+  \begin{subfigure}[b]{.46\linewidth}
     \centering
     \includegraphics[width=\textwidth]{tsurigane_result_LCDP.png}
     \caption{GF pesato-->[#Iwata:2013aa][]<!--}\label{fig:gf-comparison-d}
   \end{subfigure}
-  ~
-  \begin{subfigure}[b]{.3\linewidth}
+
+  \begin{subfigure}[b]{.46\linewidth}
     \centering
     \includegraphics[width=\textwidth]{tsurigane_result_KWS.png}
     \caption{GF proposto}\label{fig:gf-comparison-e}
   \end{subfigure}%
   ~
-  \begin{subfigure}[b]{.3\linewidth}
+  \begin{subfigure}[b]{.46\linewidth}
     \centering
     \includegraphics[width=\textwidth]{tsurigane_result.png}
     \caption{Blending}\label{fig:gf-comparison-f}
   \end{subfigure}
-  \caption{Risultato della composizione di immagini
+  \caption{Risultati della composizione di immagini
     flash/no-flash}\label{fig:gf-comparison}
   \medskip
   \small
 \end{figure}
 -->
-<!-- \todo{Description of the figure? Circling of the decolourations?} -->
 
 La [](#fig:gf-comparison) mostra un confronto tra il GF pesato, il GF
 proposto, il GF ottenuto tramite blending ed alcuni metodi standard
@@ -477,9 +523,9 @@ innaturali nelle immagini risultanti. I risultati ottenuti tramite il [metodo
 originale di questa applicazione [#Petschnigg:2004aa][]](#fig:gf-comparison-b)
 ed il [GF standard [#He:2013aa][]](#fig:gf-comparison-c) sono simili e le loro
 regioni dinamiche soffrono di sfocature e decolorazioni, principalmente
-causati dal disallineamento tra i pixel. Il [GF
+causate dal disallineamento tra i pixel. Il [GF
 pesato[#Iwata:2013aa][]](#fig:gf-comparison-d) è in grado di ridurre le
-sfocature preservando meglio i bordi delle regioni dinamiche, ma lascia
+sfocature preservando meglio i bordi delle regioni dinamiche, ma lasciando
 comunque alcune decolorazioni. Il [GF proposto](#fig:gf-comparison-e) ottiene
 buoni risultati nelle regioni dinamiche ma causa la comparsa di decolorazioni
 nelle aree scure. Il [risultato finale](#fig:gf-comparison-f) ottenuto come
@@ -492,7 +538,7 @@ quanto alcune regioni statiche sono state erroneamente classificate (e.g., le
 travi del campanile), ma in queste regioni i risultati di entrambi i GF
 risultano simili e, in ogni caso, il problema è riducibile specificando queste
 situazioni nel dataset di addestramento. Questo problema è trattabile in modo
-simile simile all'image matting [#Levin:2008aa,Li:2008aa][], ossia, etichette
+simile all'image matting [#Levin:2008aa,Li:2008aa][], ossia, etichette
 definite come scarabocchi o trimap possono essere estesi automaticamente a
 regioni simili. Questa tecnica potrebbe quindi essere utilizzata per
 migliorare la precisione di classificazione.

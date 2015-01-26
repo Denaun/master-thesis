@@ -14,8 +14,10 @@ width=0.72\linewidth,
 height=0.405\linewidth,
 at={(0,0)},
 scale only axis,
-xmin=-0.02,
-xmax=0.16,
+xlabel={Distanza},
+xmin=0,
+xmax=0.15,
+ylabel={Densità di probabilità},
 ymin=0,
 ymax=100
 ]
