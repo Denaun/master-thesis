@@ -82,9 +82,9 @@ classici[#Apostoloff:2004aa,Berman:2000aa,Chuang:2002aa,Chuang:2001aa,Ruzon:2000
 affrontavano il problema restringendo l'analisi ad una piccola regione
 dell'immagine, effettuando la stima basandosi sui pixel vicini, dove noti,
 oppure tramite una stima iterativa e non lineare composta dall'alternanza
-della stima del colore di primo piano e sfondo con quella del matting alpha.
+della stima del colore di primo piano e sfondo con quella del *matting alpha*.
 Nel 2008, [#Levin:2008aa;][] hanno proposto una soluzione in forma chiusa
-all'image matting naturale. Il metodo deriva una funzione di costo da
+all'*image matting* naturale. Il metodo deriva una funzione di costo da
 assunzioni locali sull'omogeneità dei colori di primo piano e sfondo e, da
 questa, ottiene una funzione di costo quadratica con solamente alpha come
 incognita.
@@ -93,7 +93,7 @@ Questo metodo è stato chiamato LLM ed è ora un potente strumento per
 l'elaborazione di immagini volta all'ottimizzazione, non solo come termine di
 *data fidelity*, ma anche come vincolo versatile, ed ha visto applicazioni
 in più ambiti, come immagini intrinseche[^IntrinsicImages]
-[#Bousseau:2009aa][], tone mapping[^ToneMapping] [#Shan:2010aa][], filtraggio
+[#Bousseau:2009aa][], *tone mapping*[^ToneMapping] [#Shan:2010aa][], filtraggio
 guidato [#He:2013aa][], ed altri.
 
 Per quanto molti studi siano stati fatti riguardo al metodo nel dominio del
@@ -101,7 +101,7 @@ colore, non sono note sue applicazioni a quello dello spazio. Sono stati
 comunque studiati metodi alternativi nell'ambito dell'approssimazione di
 intensità, ad esempio:
 
-  * Nello stereo matching[#Klaus:2006aa][], la continuità della
+  * Nello *stereo matching*[#Klaus:2006aa][], la continuità della
     profondità viene ottenuta usando superfici piatte a tratti. Tuttavia, dato
     che questi metodi sono espressi come operazioni non lineari ed hanno alta
     complessità computazionale, non sono adatti all'uso per la soluzione di
@@ -118,8 +118,8 @@ Similarmente a come fatto negli studi sopracitati, verrà assunto che le
 distribuzioni delle intensità di luminanza possano essere approssimate
 localmente con piani tangenti ad una superficie. Basandosi su questa
 assunzione, verrà descritto un metodo di ottimizzazione applicabile a problemi
-di ricostruzione involgenti *vettori normali* a piani tangenziali e *gradienti
-di immagini* ortogonali alle normali. Questo metodo può essere applicato ad
+di ricostruzione involgenti vettori normali a piani tangenziali e gradienti
+di immagini ortogonali alle normali. Questo metodo può essere applicato ad
 una varietà di problemi quali lo stereo fotometrico, la rimozione di riflessi
 [#Agrawal:2005aa][], la rimozione di ombre
 [#Finlayson:2006aa,Finlayson:2004aa,Shor:2008aa][], e altri metodi chiamati
@@ -175,9 +175,9 @@ stessa scena, ottenuta però con l'ausilio del flash e, quindi, con rumore
 molto ridotto al costo della comparsa di alterazioni dei colori dovute alla
 luce del flash ed eventuali saturazioni. Nonostante questi metodi siano stati
 applicati in una varietà di situazioni, come correzione del contrasto
-[#Yuan:2012aa][] e stereo matching [#Rhemann:2011aa][], le applicazioni
-obiettivo del metodo studiato sono la rimozione del rumore ed il tone
-mapping[#Shirai:2011aa,Iwata:2013aa,Yuan:2012aa][].
+[#Yuan:2012aa][] e *stereo matching* [#Rhemann:2011aa][], le applicazioni
+obiettivo del metodo studiato sono la rimozione del rumore ed il *tone
+mapping*[#Shirai:2011aa,Iwata:2013aa,Yuan:2012aa][].
 
 I filtri guidati nascono come alternativa ai classici filtri LTI, permettendo
 tempi di elaborazione genericamente inferiori (risultano infatti richiedere
@@ -225,7 +225,7 @@ ai colori locali dei pixel dell'immagine fornita in input $\vect{p}_j \in
 \left(\|\vect{A}_i\vect{I}_j + \vect{b}_i - \vect{p}_j\|^2_2
       + R\right)
 \\]
-dove $w_{ij}$ sono pesi introdotti per rimuovere outliers ed $R$ è un
+dove $w_{ij}$ sono pesi introdotti per rimuovere *outliers* ed $R$ è un
 termine di regolarizzazione atto a garantire l'esistenza di una soluzione.  
 
 Nell'applicazione di questo GF a *regioni dinamiche*, come foglie su alberi o
@@ -301,7 +301,7 @@ quindi sugli [errori commessi nella trasformazione](#eq:gf-classic) e sulle
 norme delle matrici usate per riconoscere la comparsa di sfocature
 nell'immagine in uscita. Come classificatore viene adottato un SVM
 [#Cortes:1995aa,Joachims:1999aa][], mentre il GF usato per il calcolo delle
-feature necessarie alla classificazione è[#Iwata:2013aa][].
+*feature* necessarie alla classificazione è[#Iwata:2013aa][].
 
 [^IntrinsicImages]: La tecnica delle __immagini intrinseche__ consiste nella
 scomposizione di un'immagine tra componenti intrinseche di riflessione,

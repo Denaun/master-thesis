@@ -126,7 +126,7 @@ profondità ed i gradienti come vettori normali. Per esaminare la tolleranza al
 rumore, nella riga superiore, è stato aggiunto un rumore Gaussiano $\sim
 \mathcal{N}(0, 0.05)$ alla mappa dei gradienti dopo la conversione e, nella
 riga inferiore, un rumore con la stessa distribuzione è stato aggiunto
-all'immagine originale. Come offset $s\vect{v}$ viene aggiunto il valore medio
+all'immagine originale. Come *offset* $s\vect{v}$ viene aggiunto il valore medio
 dell'immagine originale all'immagine recuperata ([](#eq:llm-space-offset)).
 Per una valutazione numerica, viene mostrato il PSNR tra l'immagine originale
 ed i risultati. Per quanto riguarda il metodo di Poisson, nella riga superiore
@@ -253,7 +253,7 @@ tramite il LLM. [](#fig:llm-reflection-detail) mostra alcuni dettagli delle
 immagini. L'obiettivo è di rimuovere il riflesso del fotografo (ed il rumore
 dovuto al non utilizzo del flash in condizioni di scarsa illuminazione)
 dall'immagine originale (a) utilizzando l'immagine guida (b). Come [vettore di
-offset $s\vect{v}$](#eq:llm-space-offset) viene utilizzato nuovamente il
+*offset* $s\vect{v}$](#eq:llm-space-offset) viene utilizzato nuovamente il
 colore medio dell'immagine originale (a) nel restauro delle immagini (c-f). I
 risultati (c) e (d) sono ottenuti tramite il metodo di Poisson utilizzando la
 differenza finita in avanti con l'operatore di Scharr: si può notare che
@@ -424,9 +424,9 @@ flash/no-flash*[^FlashNoFlash] tramite GF (questa applicazione è stata
 originariamente proposta in [#Petschnigg:2004aa,Eisemann:2004aa][]) in quanto
 l'immagine *flash* (guida) e l'immagine *no-flash* (input) includono molte
 corrispondenze errate causate da sotto/sovra-esposizioni in regioni statiche.
-Per valutare i risultati della classificazione tramite SVM e del blending
+Per valutare i risultati della classificazione tramite SVM e del *blending*
 effettuato con [](#eq:gf-blending), è stata addestrata la SVM su un dataset di
-30 coppie di immagini corredate da trimap, come descritto in
+30 coppie di immagini corredate da *trimap*, come descritto in
 [](#sec:svm-training). Alle immagini di input è stato aggiunto del rumore
 Gaussiano $\sim \mathcal{N}(0, 0.06)$, e le intensità delle immagini
 utilizzate per l'addestramento e per il test sono state normalizzate tra $[0,
@@ -518,7 +518,7 @@ La [](#fig:gf-comparison) mostra un confronto tra il GF pesato, il GF
 proposto, il GF ottenuto tramite blending ed alcuni metodi standard
 [#He:2013aa,Dabov:2007aa,Petschnigg:2004aa][]. Il [BM3D
 [#Dabov:2007aa][]](#fig:gf-comparison-a) viene mostrato come rappresentante
-dei metodi di denoising su un'immagine singola, anche se causa pattern
+dei metodi di *denoising* su un'immagine singola, anche se causa pattern
 innaturali nelle immagini risultanti. I risultati ottenuti tramite il [metodo
 originale di questa applicazione [#Petschnigg:2004aa][]](#fig:gf-comparison-b)
 ed il [GF standard [#He:2013aa][]](#fig:gf-comparison-c) sono simili e le loro
@@ -529,7 +529,7 @@ sfocature preservando meglio i bordi delle regioni dinamiche, ma lasciando
 comunque alcune decolorazioni. Il [GF proposto](#fig:gf-comparison-e) ottiene
 buoni risultati nelle regioni dinamiche ma causa la comparsa di decolorazioni
 nelle aree scure. Il [risultato finale](#fig:gf-comparison-f) ottenuto come
-blending del GF pesato e del GF proposto presenta un aspetto naturale,
+*blending* del GF pesato e del GF proposto presenta un aspetto naturale,
 riducendo le decolorazioni causate da entrambi i metodi.
 
 La performace della classificazione effettuata dalla SVM (mostrata in
@@ -538,7 +538,7 @@ quanto alcune regioni statiche sono state erroneamente classificate (e.g., le
 travi del campanile), ma in queste regioni i risultati di entrambi i GF
 risultano simili e, in ogni caso, il problema è riducibile specificando queste
 situazioni nel dataset di addestramento. Questo problema è trattabile in modo
-simile all'image matting [#Levin:2008aa,Li:2008aa][], ossia, etichette
+simile all'*image matting* [#Levin:2008aa,Li:2008aa][], ossia, etichette
 definite come scarabocchi o trimap possono essere estesi automaticamente a
 regioni simili. Questa tecnica potrebbe quindi essere utilizzata per
 migliorare la precisione di classificazione.

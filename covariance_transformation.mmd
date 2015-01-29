@@ -1,18 +1,25 @@
 Trasformazioni di colore tra coppie di immagini [sec:cov]
 =========================================================
 
-In questo capitolo, verrà prima mostrato il filtro guidato proposto (accennato
-in [](#sec:intro-cov)), basato sulla trasformazione tra covarianze, e la
-sua risoluzione. Successivamente verranno analizzate alcune cause della
-comparsa di decolorazioni e verranno proposti alcuni rimedi. Verrà infine
-trattato l'utilizzo di un classificatore per unire i risultati ottenuti
-dall'uso del GF proposto con i risultati ottenuti dall'utilizzo del GF
+In questo capitolo, verrà prima mostrato il filtro guidato proposto in questo
+lavoro (accennato in [](#sec:intro-cov)), basato sulla trasformazione tra
+covarianze, e la sua risoluzione. Successivamente verranno analizzate alcune
+cause della comparsa di decolorazioni e verranno proposti alcuni rimedi. Verrà
+infine trattato l'utilizzo di un classificatore per unire i risultati ottenuti
+dall'uso del GF qui sviluppato con i risultati ottenuti dall'utilizzo del GF
 proposto da [#Iwata:2013aa;][].
 
 ## Filtro guidato per regioni dinamiche
 
-L'obiettivo del GF proposto per le regioni dinamiche resta comunque quello di
-trovare le matrici di trasformazione $\vect{A}_i$ ed i vettori di
+L'utilizzo di filtri guidati classici per il restauro di immagini deteriorate
+da rumore e saturazione dell'intensità del colore porta a risultati che
+presentano sfocature e ridotto contrasto nelle regioni in cui le due immagini
+utilizzate non siano perfettamente allineate. Per gestire queste regioni è
+stato sviluppato un GF in grado di rilassare la corrispondenza
+pixel-per-pixel. 
+
+L'obiettivo del metodo qui proposto per le regioni dinamiche resta comunque
+quello di trovare le matrici di trasformazione $\vect{A}_i$ ed i vettori di
 traslazione $\vect{b}_i$. Per ottenerli, però, viene tenuto conto del fatto
 che la forma di una distribuzione di colore è numericamente rappresentabile
 tramite la sua matrice di covarianza e, per questo, viene formulato un
@@ -22,7 +29,7 @@ problema di ottimizzazione con un vincolo aggiunto sulle covarianze:
 \Cov(\{\vect{A}_i\vect{I}_j + \vect{b}_i\}) = \Cov(\{\vect{p}_j\})
 \\]
 Dove la covarianza viene calcolata sfruttando dei pesi $w_{ij}$, usati per la
-rimozione di outliers, risultando quindi definita come:
+rimozione di *outliers*, risultando quindi definita come:
 \\[\label{eq:cov-def}
 \Cov(\{x_j\}) = \frac{1}{\sum_j w_{ij}}
 \sum_{j\in\Omega_i} (\vect{x}_j - \mean{\vect{x}}_i)
@@ -39,9 +46,11 @@ una soluzione: il problema sarà descritto in [](#sec:discolorations).
 
 ### Soluzione rispetto a $\vect{b}_i$
 
-Espandendo [](#eq:gf-proposed) con la [definizione di covarianza](#eq:cov-def)
-e sostituendo $\vect{I}'_j = \vect{I}_j - \mean{\vect{I}}_i$ e
-$\vect{p'_j} = \vect{p}_j - \mean{\vect{p}}_i$, si ottiene:
+Espandendo il vincolo sulle covarianze ($\Cov(\{\vect{A}_i\vect{I}_j +
+\vect{b}_i\}) = \Cov(\{\vect{p}_j\})$) di [](#eq:gf-proposed) con la
+definizione di covarianza data in [](#eq:cov-def) e sostituendo $\vect{I}'_j =
+\vect{I}_j - \mean{\vect{I}}_i$ e $\vect{p'_j} = \vect{p}_j -
+\mean{\vect{p}}_i$, si ottiene:
 \\[\label{eq:gf-solution-b}
 \begin{split}
 0 & = \Cov(\{\vect{A}_i\vect{I}'_j + \vect{b}_i\}) - \Cov(\{p'_j\}) \\
@@ -51,7 +60,7 @@ $\vect{p'_j} = \vect{p}_j - \mean{\vect{p}}_i$, si ottiene:
   & = \vect{A}_i \Cov(\{\vect{I}'_j\}) \transp{\vect{A}_i} - \Cov(\{p'_j\})
 \end{split}
 \\]
-In questo processo, il vettore di offset $\vect{b}_i$ scompare, risultando
+In questo processo, il vettore di *offset* $\vect{b}_i$ scompare, risultando
 apparentemente scorrelato dall'equazione. Derivando invece [](#eq:gf-classic)
 rispetto a $\vect{b}_i$ e ponendo il risultato a zero, si ottiene $\vect{b}_i
 = \mean{\vect{p}}_i - \vect{A}_i \mean{\vect{I}}_i$. Sostituendo nuovamente
@@ -67,7 +76,7 @@ covarianza in [](#eq:gf-solution-b), si ottiene:
 ### Soluzione rispetto a $\vect{A}_i$ [sec:gf-solution-a]
 
 La soluzione rispetto ad $\vect{A}_i$ si basa sui concetti di
-*decorrelazione* e di *ricostruzione* usati nella PCA.
+__decorrelazione__ e di __ricostruzione__ usati nella PCA.
 
 Innanzitutto, le matrici di covarianza $\Cov(\{\vect{I}'_j\})$ e
 $\Cov(\{\vect{p}'_j\})$ sono scomposte usando la SVD:
@@ -185,8 +194,8 @@ $\vect{V}_i$](#eq:gf-solution-a). Queste presentano però due ambiguità:
 
 Per gestire questi problemi, vengono fatte due assunzioni:
 
- 1. Una coppia di patch present distribuzioni di colore di forma simile tra di
-    loro. Questo implica che l'ordine degli assi principali sia lo stesso.
+ 1. Una coppia di patch presenta distribuzioni di colore di forma simile tra
+    di loro. Questo implica che l'ordine degli assi principali sia lo stesso.
     Inoltre, nel caso in cui la distribuzione divenga sferica in una regione
     di colore uniforme e che, quindi, l'ordine degli assi non sia decidibile,
     questo non risulta un problema visto che la varianza lungo ogni asse è
@@ -206,7 +215,7 @@ dall'influenza del rumore, le sue varianze $\{\xi^2_1, \xi^2_2, \xi^2_3\}$
 aumentano. Questo porta ad un'espansione eccessiva della distribuzione
 trasformata e, quindi, ad un'enfasi eccessiva del colore.
 
-Dalla nostra esperienza[#Shirai:2012aa,Ono:2013aa][], le deviazioni
+Dall'esperienza descritta in [#Shirai:2012aa,Ono:2013aa][], le deviazioni
 standard lungo il secondo e, in particolare, il terzo asse ($\{\xi_2,
 \xi_3\}$) sono collegate alle decolorazioni: anche nel caso in cui i dati non
 contengano alcun rumore, un'espansione della distribuzione del colore lungo
@@ -285,24 +294,25 @@ $\vect{\Xi}_i$ viene fatta come segue:
 
 I risultati dell'utilizzo di entrambi i GF sono mostrati in
 [](#fig:gf-results): si può notare in [](#fig:gf-results-d) che il GF proposto
-risulta in un'immagine naturale e senza sfumature per la regione dinamica,
-mentre purtroppo causa la comparsa di decolorazioni nella regione statica a
-causa della presenza di rumore nell'immagine di input. Visto che ogni GF ha
-vantaggi e svantaggi, l'obiettivo di questo capitolo è di riuscire ad
-utilizzare il GF adeguato in modo selettivo, regione per regione, in modo da
-ottenere un risultato più naturale.
+in questo lavoro produce un'immagine naturale e senza sfumature nella regione
+dinamica, mentre purtroppo causa la comparsa di decolorazioni nella regione
+statica a causa della presenza di rumore. Visto che ogni GF ha vantaggi e
+svantaggi, l'obiettivo di questo capitolo è di riuscire ad utilizzare il GF
+adeguato in modo selettivo, regione per regione, in modo da ottenere un
+risultato più naturale.
 
 Analizzando le matrici di trasformazione ottenute con i GF esistenti, si nota
 che la presenza di sfocature è associabile alla norma delle matrici
-$\|\vect{A}_i\|$, i.e., giocano un ruolo da fattore di riscalatura del contrasto
-di ogni patch e, decrescendo, causano il valore di $\vect{A}_i\vect{I}_i$ di
-avvicinarsi a zero e, quindi del valore finale di $\vect{A}_i\vect{I}_j +
-\vect{b}_i$ di avvicinarsi alla media $\vect{b}_i$ dei pixel della patch.
-Questa osservazione implica che anche le regioni dinamiche sono classificabili
-sulla base delle norme e degli errori di trasformazione di [](#eq:gf-classic).
+$\|\vect{A}_i\|$, i.e., giocano un ruolo da fattore di riscalatura del
+contrasto di ogni patch e, decrescendo, fanno sì che il valore di
+$\vect{A}_i\vect{I}_i$ si avvicini a zero e, il valore finale di
+$\vect{A}_i\vect{I}_j + \vect{b}_i$ tenderà alla media $\vect{b}_i$ dei pixel
+della patch.  Questa osservazione implica che anche le regioni dinamiche sono
+classificabili sulla base delle norme e degli errori di trasformazione di
+[](#eq:gf-classic).
 
 Per effettuare questa classificazione tra regioni statiche e regioni
-dinamiche, viene utilizzata un SVM [#Cortes:1995aa,Burges:1998aa][]
+dinamiche, viene utilizzata una SVM [#Cortes:1995aa,Burges:1998aa][]
 [^ImplementazioneSVM]. La SVM richiede una fase di addestramento ed una di
 testing: i dettagli della prima sono descritti nella prossima sezione, mentre
 i risultati della seconda fase sono descritti in [](#sec:gf-results).
@@ -340,45 +350,44 @@ i risultati della seconda fase sono descritti in [](#sec:gf-results).
 \end{figure}
 -->
 
-Per la fase di addestramento, è stato costruito un dataset di triple di
+Per la fase di addestramento, è stato costruito un *dataset* di triple di
 immagini organizzate come in [](#fig:svm-train): alle due immagini di input e
-guida viene associata una terza immagine con degli "scarabocchi" utilizzati
-per specificare le regioni statiche (tratti neri) e le regioni dinamiche
-(tratti bianchi) [](#fig:svm-train-c). I pixel corrispondenti a regioni
-statiche vengono etichettate come $y_i = -1$, le regioni dinamiche vengono
-etichettate come $y_i = +1$, mentre le regioni in grigio non vengono
-utilizzate.
+guida viene associata una maschera utilizzata per specificare le regioni
+statiche (tratti neri) e le regioni dinamiche (tratti bianchi)
+[](#fig:svm-train-c). I pixel corrispondenti a regioni statiche vengono
+etichettate come $y_i = -1$, le regioni dinamiche vengono etichettate come
+$y_i = +1$, mentre le regioni in grigio non vengono utilizzate.
 
 I *feature vectors* ($\in \set{R}^3$) usati per l'addestramento vengono poi
-definiti come composizione delle seguenti features:
+definiti come composizione delle seguenti *features*:
 
   * La norma di Frobenius[^FrobeniusNorm] della matrice di trasformazione,
     i.e., $\|\vect{A}_i\|^2_F \in \set{R}$;
-  * La norma $\ell_2$ del vettore di offset, i.e., $\|\vect{b}_i\|^2_2 \in
+  * La norma $\ell_2$ del vettore di *offset*, i.e., $\|\vect{b}_i\|^2_2 \in
     \set{R}$.  
-    Questa feature è pensata per le decolorazioni nelle regioni scure, dove la
-    media dei pixel tende a zero e la forma delle distribuzioni di colore
+    Questa *feature* è pensata per le decolorazioni nelle regioni scure, dove
+    la media dei pixel tende a zero e la forma delle distribuzioni di colore
     diviene sferica.
   * Il termine di fedeltà: $\sum_{j\in\Omega_i} w_{ij}
     \|\vect{A}_i\vect{I}_j + \vect{b}_i - \vect{p}_j\|^2_2 \in
     \set{R}$.
 
 Utilizzando queste etichette e questi vettori di caratteristiche per ogni
-coppia di immagini nel dataset, viene effettuato l'addestramento della SVM.
+coppia di immagini nel *dataset*, viene effettuato l'addestramento della SVM.
 
 ### Classificazione e metodi di blending
 
 I risultati della classificazione, effettuata basandosi sull'etichettatura
-effettuata come descritto nella [](#sec:svm-training), consistono in valori
-positivi ($y_i > 0$) per le regioni dinamiche e valori negativi ($y_i < 0$)
-per le regioni statiche.
+descritta nella [](#sec:svm-training), consistono in valori positivi ($y_i >
+0$) per le regioni dinamiche e valori negativi ($y_i < 0$) per le regioni
+statiche.
 
-Il risultato finale viene ottenuto come blending pixel-wise dei risultati del
+Il risultato finale viene ottenuto come *blending pixel-wise* dei risultati del
 GF pesato $\vect{q}_i$ e del GF proposto $\vect{q}'_i$:
 \\[\label{eq:gf-blending}
 \vect{q}^*_i = (1-\alpha(y_i))\vect{q}_i + \alpha(y_i)\vect{q}'_i
 \\]
-dove $\alpha(\cdot) \in [0, 1]$ denota una funzione di blending come una
+dove $\alpha(\cdot) \in [0, 1]$ denota una funzione di *blending* come una
 sigmoide---e.g., $\alpha(y_i) = (1 + \exp(-\beta y_i))^{-1} \in [0, 1]$, dove
 $\beta$ è un parametro che controlla la larghezza della transizione. I
 risultati sperimentali ottenuti utilizzando questo metodo sono mostrati in

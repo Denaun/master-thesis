@@ -3,10 +3,11 @@ Applicazioni del Modello Lineare Locale [sec:llm-applications]
 
 ## Inter-conversione tra Vettori Normali e Gradienti [sec:llm-applications-gdo]
 
-Nel caso dello stereo fotometrico convenzionale, $z_i$ in
-[](#eq:gdo-relationship) viene trattata come incognita mentre $\vect{n}_i$ è
-dato da uno step di stima effettuato in precedenza. Per ottenere i valori
-ottimi $z^*_i$, viene risolta la seguente equazione di Poisson:
+Nel caso dello stereo fotometrico convenzionale, $z_i$
+nell'[](#eq:gdo-relationship) viene trattata come incognita mentre
+$\vect{n}_i$ è dato da uno step di stima effettuato in precedenza. Per
+ottenere i valori ottimi $z^*_i$, viene risolta la seguente equazione di
+Poisson:
 \\[\label{eq:gdo-poisson}
 \arg\min_z\sum_i\left\|\nabla z_i-\vect{n}'_i\right\|^2_2+C
 \\]
@@ -19,11 +20,10 @@ z^*_i = (\transp{\nabla^*}\nabla)^{-1}(\transp{\nabla^*}\vect{n}'_i)
 dove $\transp{\nabla^*} = \transp{[\partial^*_x \partial^*_y]}$ indica la
 derivata all'indietro quando $\nabla$ è definito come derivata in avanti.
 [](#eq:gdo-solution) è calcolabile in modo efficiente sfruttando la
-trasformata di Fourier [#Finlayson:2006aa][].
-
-La risoluzione di questo problema può essere effettuata applicando il LLM di
-[](#eq:llm-space) al posto [dell'equazione di Poisson](#eq:gdo-poisson),
-ottenendo il risultato mostrato in [](#eq:llm-space-system).
+trasformata di Fourier [#Finlayson:2006aa][]. La risoluzione di questo
+problema può essere effettuata applicando il LLM al posto [dell'equazione di
+Poisson](#eq:gdo-poisson) e risolvendo rispetto a $\vect{z}$ come descritto
+nella [](#sec:llm-sol-z).
 
 Come altro caso di GDO, viene considerata la situazione in cui $z_i$ sono noti
 e si intende ricostruire l'immagine $\widehat{z}_i$ da una versione modificata
@@ -36,11 +36,11 @@ dei suoi gradienti $\nabla \widehat{z}_i = f(\nabla z_i)$, ossia risolvendo:
 Questo problema è risolvibile, come descritto sopra, utilizzando
 [](#eq:llm-space-system) ma richiede prima il calcolo dei gradienti $\nabla
 z_i$. Mentre i metodi convenzionali utilizzano i valori ottenuti tramite
-filtri con corta o lunga risposta all'impulso---e.g., differenze finite in
+filtri con risposta all'impulso corta o lunga---e.g., differenze finite in
 avanti o indietro tra due pixel oppure filtri più tolleranti al rumore come
 filtri di Sobel, di [#Scharr:2000aa;][] od altri[#Shen:2009aa][]---, è
-possibile ottenere i gradienti applicando il LLM come descritto in
-[](#eq:llm-space-solution-n).
+possibile ottenere i gradienti applicando il LLM come descritto
+nell'[](#eq:llm-space-solution-n).
 
 ## Applicazione alla Rimozione di Riflessi [sec:llm-applications-reflection]
 
@@ -48,7 +48,7 @@ Come applicazione possibile del LLM proposto, viene mostrato l'utilizzo del
 metodo nella risoluzione del problema della *self reflection removal*
 descritto in [#Agrawal:2005aa][]. Il problema si presenta quando vengono
 scattate fotografie attraverso vetri a soggetti illuminati in posti scuri: lo
-scatto di una fotografia senza flash presenta rumore dovuta all'alta
+scatto di una fotografia senza flash presenta rumore dovuto all'alta
 sensibilità ISO necessaria e, in particolare, spesso accade che il fotografo
 venga riflesso dal vetro; l'utilizzo del flash risolve questi problemi ma
 satura l'illuminazione originale della scena. Lo scopo è quindi la
@@ -58,7 +58,7 @@ naturali dell'immagine senza flash.
 Chiamando $A$ l'immagine senza flash e $F$ l'immagine con il flash, una coppia
 di gradienti di luminanza ideali al pixel $i$ e per il colore $c\in\{r, g, b\}$
 viene denotata come $\{\nabla \widehat{A}^c_i, \nabla \widehat{F}^c_i\}$.
-In situazioni pratiche, compaiono degli offset $\{\nabla R^c_{A_i}, \nabla
+In situazioni pratiche, compaiono degli *offset* $\{\nabla R^c_{A_i}, \nabla
 R^c_{F_i}\}$ a causa di riflessi e rumore. I gradienti $\{\nabla A^c_i, \nabla
 F^c_i\}$ osservati risultano quindi esprimibili dalla seguente relazione:
 \\[\label{eq:reflection-relationship}
@@ -67,13 +67,13 @@ F^c_i\}$ osservati risultano quindi esprimibili dalla seguente relazione:
   \nabla F^c_i = \nabla \widehat{F}^c_i + \nabla R^c_{F_i} \\
 \end{cases}
 \\]
-dove il nostro obiettivo è di ottenere $\widehat{A}^c_i$.  
+dove il nostro obiettivo è ottenere $\widehat{A}^c_i$.  
 Per la risoluzione del problema vengono effettuate due assunzioni:
 
  1. L'immagine con flash non include artefatti ($\nabla R^c_{F_i} = 0$) ed è
     ottenuta come riscalatura dell'immagine originale: $\nabla \widehat{F}^c_i
     = \nabla F^c_i = k^c_i \nabla \widehat{A}^c_i$
- 2. I vettori di offset sono ortogonali ai gradienti ideali, ossia $\nabla
+ 2. I vettori di *offset* sono ortogonali ai gradienti ideali, ossia $\nabla
     \widehat{A}^c_i \nabla R^c_i = 0$.
 
 Sulla base di queste assunzioni, pre-moltiplicando
@@ -120,7 +120,7 @@ ombre da fotografie per motivi estetici, come ombre proiettate dal
 fotografo o causate dall'uso del flash, oppure in applicazioni di *computer
 vision*, come pre-elaborazione utile a semplificare ed incrementare la
 probabilità di successo di compiti come la segmentazione di immagini, il
-tracking, o il riconoscimento di oggetti.
+*tracking*, o il riconoscimento di oggetti.
 
 Per affrontare questo problema sono state analizzate le due differenti
 metodologie descritte da [#Finlayson:2009aa;][] e da [#Shor:2008aa][].
@@ -219,8 +219,8 @@ utilizzare la media geometrica $\rho_M = \sqrt[3]{R \times G \times B}$ in
 dipendenza lineare. Così facendo si ottiene un vettore tridimensionale ed i
 rapporti giacciono su un piano ortogonale a $\vect{u} = \transp{[1, 1, 1]}$.
 
-Questa derivazione, descritta in [#Finlayson:2006aa][], si basa su una profonda
-conoscenza[^SensorResponseFinlayson] dei sensori della fotocamera,
+Questa derivazione, descritta in [#Finlayson:2006aa][], si basa su una
+completa conoscenza[^SensorResponseFinlayson] dei sensori della fotocamera,
 informazione spesso non disponibile.  Nel caso generico, l'immagine
 indipendente dall'illuminazione è comunque ottenibile, come descritto in
 [#Finlayson:2009aa,Finlayson:2004aa][], analizzando l'entropia di varie
@@ -232,9 +232,9 @@ monodimensionale risultante. Il metodo proposto è quindi, nella versione più
 semplice, di attraversare tutti i possibili orientamenti tra $\SI{0}{\degree}$
 e $\SI{180}{\degree}$ e proiettare $\vect{\chi}$ in quella direzione: per ogni
 angolazione si può applicare la definizione di entropia di Shannon dopo aver
-calcolato l'istogramma dell'immagine, utilizzato come metodo di
-quantizzazione.  Dividendo l'istogramma per il numero di elementi in modo da
-ottenere delle probabilità $p_i$, l'entropia è calcolabile come:
+calcolato l'istogramma dell'immagine. Dividendo l'istogramma per il numero di
+elementi in modo da ottenere delle probabilità $p_i$, l'entropia è calcolabile
+come:
 \\[\label{eq:shadow-entropy}
 \eta = \sum^N_{i=1} -p_i \log_2(p_i)
 \\]
@@ -256,25 +256,25 @@ ed applicandola come segue:
 \widetilde{\vect{\chi}}' = P_{\ortho{\vect{e}}} \vect{\chi}'
 \\]
 
-Questo progresso, pur essendo molto utile, risulta comunque in un'immagine dai
-colori innaturali e mancante dell'informazione sull'intensità. In molte
+Questo miglioramento, pur essendo molto utile, risulta comunque in un'immagine
+dai colori innaturali e mancante dell'informazione sull'intensità. In molte
 applicazioni è preferibile avere un'immagine identica all'originale, ad
 eccezione delle ombre, ma per ottenere ciò bisogna adottare strategie
-differenti. L'algoritmo proposto da [#Finlayson:2006aa,Finlayson:2009aa][]
+differenti. L'algoritmo proposto in [#Finlayson:2006aa,Finlayson:2009aa][]
 prende spunto dai metodi di *lightness recovery*[^LightnessRecovery]: questi
 algoritmi ricevono in ingresso un'immagine a colori tridimensionale e
 restituiscono due immagini intrinsiche: una basata sulla riflettanza
 (l'immagine *lightness*) e l'altra sull'illuminazione. Il calcolo della
-lightness si basa sull'assunzione che l'illuminazione vari lentamente lungo
+*lightness* si basa sull'assunzione che l'illuminazione vari lentamente lungo
 un'immagine dove i cambiamenti nella riflettanza sono lenti. Da questo segue
 che ponendo una soglia sulla derivata dell'immagine, è possibile rimuovere
 cambiamenti lenti ed il risultato è ottenibile dall'integrazione di questa
 immagine.
 
 Dato che le ombre consistono in cambiamenti tendenzialmente rapidi
-dell'illuminazione, queste non sono rimosse nell'immagine lightness ma,
+dell'illuminazione, queste non sono rimosse nell'immagine *lightness* ma,
 applicando questa idea alle due immagini disponibili nel problema della
-rimozione delle ombre---l'immagine 3-d originale e l'immmagine 2-d priva di
+rimozione delle ombre---l'immagine 3-d originale e l'immagine 2-d priva di
 ombre---è possibile distinguere i bordi di oggetti materiali dai bordi di
 ombre ed eliminarli di conseguenza.
 
@@ -283,15 +283,15 @@ nell'identificazione e nel confronto dei bordi in ognuna delle due immagini:
 quelli scomparsi nell'immagine sono trattati come bordi delle ombre e la
 derivata dell'immagine originale lungo di essi viene posta a zero. Un metodo
 iterativo viene proposto per effettuare un'integrazione dell'immagine che
-includa anche un semplice processo di inpainting[^Inpainting] dei bordi
+includa anche un semplice processo di *inpainting*[^Inpainting] dei bordi
 rimossi.
 
 La strategia proposta prevede un'alternanza tra integrazione e smussatura dei
 gradienti del bordo, in modo da ammorbidire il passaggio dalla regione in luce
 alla regione in ombra ristorata. Il LLM è applicabile in questa fase del
-metodo, sostituendolo il calcolo dei gradienti e la loro integrazione in ogni
-passaggio dell'algoritmo, rispettive nelle forme di
-[](#eq:llm-space-solution-n) ed [](#eq:llm-space-system)).
+metodo, sostituendolo al calcolo dei gradienti ed alla loro integrazione in
+ogni passaggio dell'algoritmo, rispettivamente nelle forme di
+[](#eq:llm-space-solution-n) ed [](#eq:llm-space-system).
 
 Purtroppo questo metodo di rilevamento delle ombre è molto sensibile ai
 parametri utilizzati ed alla qualità dell'immagine in ingresso. L'immagine
@@ -374,7 +374,7 @@ colore del pixel in analisi e quello corrispondente al colore di riferimento.
 L'intuizione dietro a questa metrica è che il colore di punti con riflettanza
 simile corrisponda a vettori circa collineari e che la presenza dell'ombra
 comporti principalmente una riduzione della loro norma. Questa osservazione è
-stata sfruttata anche da [#Omer:2004aa;][] riguardo alle color-lines.
+stata sfruttata anche da [#Omer:2004aa;][] riguardo alle *color-lines*.
 
 <!--
 \begin{figure}
@@ -453,13 +453,13 @@ prima dopo il secondo massimo dell'istogramma](#fig:llm-shadow-histogram).
 
 Il passo successivo consiste nella divisione della superficie tra [parte
 effettivamente ombreggiata e parte illuminata](#fig:llm-shadow-mask); ciò
-viene fatto nuovamente con un processo di region growing, questa volta
+viene fatto nuovamente con un processo di *region growing*, questa volta
 utilizzando solo i punti ottenuti dal passo precedente e, ad ogni iterazione,
-estendendo la patch corrispondente al shadow seed. Queste iterazioni di region
-growing utilizzano una regola di terminazione aggiuntiva rispetto alle
-versioni classiche, ossia viene richiesto che venga preservata la condizione
-che la varianza della parte in ombra resti inferiore alla varianza della parte
-illuminata:
+estendendo la patch corrispondente al *shadow seed*. Queste iterazioni di
+*region growing* utilizzano una regola di terminazione aggiuntiva rispetto
+alle versioni classiche, ossia viene richiesto che venga preservata la
+condizione che la varianza della parte in ombra resti inferiore alla varianza
+della parte illuminata:
 \\[\label{eq:shadow-variance-rg}
 \Var[I(M_s)] \leq \Var[I(M_l)]
 \\]
@@ -469,13 +469,13 @@ superficie ombreggiata e della superficie illuminata.
 La maschera corrispondente all'ombra da eliminare viene poi completata
 includendo tutte le regioni dell'immagine non appartenenti a $M_l$ circondate
 da pixel identificati come appartenenti a $M_s$ ed infine raffinata tramite
-l'algoritmo di image matting descritto in [#Levin:2008aa][]: viene costruita
+l'algoritmo di *image matting* descritto in [#Levin:2008aa][]: viene costruita
 [una *trimap*](#fig:llm-shadow-mask-c) indicante le regioni certamente
 appartenenti all'ombra (nell'implementazione, questa regione corrisponde alla
 versione di $M_s$ completata e leggermente erosa), certamente non appartenenti
 all'ombra (corrispondente al complemento di una leggera dilatazione della
 versione di $M_s$ completata) e le regioni ignote (tutti i punti restanti). Al
-risultato dell'[image matting](#fig:llm-shadow-mask-d) viene poi applicata una
+risultato dell'[*image matting*](#fig:llm-shadow-mask-d) viene poi applicata una
 soglia $\alpha = 0.5$ per ottenere la maschera binaria finale, denominata
 [$M_{shadow}$](#fig:llm-shadow-mask-e).
 
@@ -515,7 +515,7 @@ pressoché la stessa SPD per qualsiasi direzione incidente, altrimenti il
 termine $a$ dovrebbe dipendere anche dalla lunghezza d'onda $\lambda$.
 
 Combinando le ultime due equazioni possiamo esprimere l'intensità su un punto
-illuminato in come funzione affine dell'intensità dello stesso punto se fosse
+illuminato come funzione affine dell'intensità dello stesso punto se fosse
 presente un'ombra:
 \\[\label{eq:shadow-lit-unlit-relation}
 I^{lit}(x, \lambda) = L^d(x, \lambda)R(x, \lambda) + \frac{1}{a(x)}
@@ -712,11 +712,12 @@ principalmente a due cause:
 [#Shor:2008aa;][] propongono quindi un trattamento della regione tramite
 inpainting basato sulla sintesi di texture descritto da [#Kwatra:2003aa;][].
 Un'alternativa può essere il restauro della texture tramite algoritmi di
-Poisson image editing[#Sunkavalli:2010aa,Perez:2003aa][]. L'algoritmo viene
-utilizzato come strumento di seamless cloning---in particolare per il texture
-transfer---come descritto da [#Perez:2003aa;][]: la texture dell'immagine
-originale lungo il bordo dell'ombra viene imposta sull'immagine ristorata.
-Questa operazione permette di mantenere un'ottima qualità nei dettagli
+*Poisson image editing*[#Sunkavalli:2010aa,Perez:2003aa][]. L'algoritmo viene
+utilizzato come strumento di *seamless cloning*---in particolare per il
+*texture transfer*---come descritto da [#Perez:2003aa;][]: la texture
+dell'immagine originale lungo il bordo dell'ombra viene imposta sull'immagine
+ristorata.  Questa operazione permette di mantenere un'ottima qualità nei
+dettagli
 originali dell'immagine ed al contempo di restaurare implicitamente---anche se
 solo in modo parziale---l'ombra lungo il bordo.
 
@@ -758,7 +759,7 @@ Coniugato. Questa consiste nell'utilizzo dell'immagine $\vect{I}^*$ come stima
 iniziale della soluzione e nell'annullamento ad ogni iterazione dei residui
 per i pixel da mantenere fissi. Considerando queste condizioni al contorno, la
 soluzione risulta essere unica e ciò rende non necessaria la definizione del
-vettore di offset $\vect{v}$ di [](#eq:llm-space-offset).
+vettore di *offset* $\vect{v}$ di [](#eq:llm-space-offset).
 
 [^SensorResponseFinlayson]: [#Finlayson:2006aa;][] espone una metodologia per
 la stima di queste informazioni, ma ciò richiede di avere un set di immagini

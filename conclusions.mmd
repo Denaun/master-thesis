@@ -9,7 +9,7 @@ dominio dello spazio. Questa ha portato alla costruzione di un metodo molto
 generico applicabile come alternativa robusta al rumore nella risoluzione di
 equazioni di Poisson. Il problema principale del metodo risulta essere la
 perdita di definizione lungo i bordi dell'immagine, per cui viene proposto un
-blending con un metodo classico meno prono a questo problema. In futuro, per
+*blending* con un metodo classico meno prono a questo problema. In futuro, per
 gestire meglio questo effetto, si potrebbe analizzare la selezione di patch di
 dimensione adattiva, come fatto da [#Lu:2012aa;][] per il dominio del colore.
 
@@ -25,8 +25,8 @@ Il secondo metodo analizzato è un GF per regioni dinamiche aiutato da un
 metodo per la classificazione delle stesse. Invece di usare corrispondenze tra
 pixel, il metodo introduce corrispondenze tra matrici di covarianza locali.
 Nella classificazione, è stata utilizzata una SVM con valori numerici ottenuti
-dalle equazioni dei GF come feature. La combinazione di GF può risultare in
+dalle equazioni dei GF come *feature*. La combinazione di GF può risultare in
 immagini con ridotte quantità di artefatti: in futuro, altri metodi di
-classificazione, blending, e combinazione potrebbero essere esplorati per
+classificazione, *blending*, e combinazione potrebbero essere esplorati per
 ridurre ulteriormente questi effetti.
 

@@ -46,13 +46,13 @@ ed $M$, con $M<N$.
 
 ## Modello Lineare Locale nel dominio del colore
 
-Il LLM convenzionale, proposto da [#Levin:2008aa;][] per l'[image
-matting](#fig:intro-matting) ed accennato
+Il LLM convenzionale, proposto da [#Levin:2008aa;][] per l'[*image
+matting*](#fig:intro-matting) ed accennato
 nell'[introduzione](#sec:intro-llm), è definibile matematicamente tramite la
 seguente trasformazione lineare, chiamando $\vect{I}_j = \transp{[I^r_j,
 I^g_j, I^b_j]} \in \set{R}^3$ i colori inclusi in una patch e
 $\vect{a}_i\in\set{R}^3$ e $b_i\in\set{R}$ rispettivamente i vettori di
-trasformazione e gli offset assegnati alla patch:
+trasformazione e gli *offset* assegnati alla patch:
 \\[\label{eq:llm-color}
 \arg\min_{p, \vect{a}, b} \sum_i
 \left(\sum_{j\in\Omega_i} w_{ij} \left\|\transp{\vect{a}}_i\vect{I}_j + b_i -
